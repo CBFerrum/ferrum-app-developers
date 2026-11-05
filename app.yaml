@@ -1,0 +1,22 @@
+id: developers
+name: Developer Hub
+version: 0.1.0
+publisher: cbferrum
+summary: "Build on the workspace: its API reference, the events it gives, and your keys"
+description: README.md
+categories: [developer]
+license: AGPL-3.0-only
+homepage: https://github.com/CBFerrum/ferrum-app-developers
+support: https://github.com/CBFerrum/ferrum-app-developers/issues
+runtime: native
+platform: ">=0.3.2, <0.4"
+ui:
+  dist: ui/dist
+contributes:
+  shell.app:
+    - id: developers
+      route: developers
+      title: Developer Hub
+      description: The API, events and keys of this workspace
+      icon: plug
+      color: "#0f766e"
