@@ -123,7 +123,7 @@ function Try({ op }: { op: Operation }) {
           <span>
             {p.name} <span className="muted">{p.in}{p.required ? ", required" : ""}</span>
           </span>
-          <input className="input" value={values[p.name] ?? ""} onChange={(e) => setValues({ ...values, [p.name]: e.target.value })} />
+          <input className="input" aria-label={p.name} value={values[p.name] ?? ""} onChange={(e) => setValues({ ...values, [p.name]: e.target.value })} />
         </label>
       ))}
       <div className="row" style={{ gap: 8 }}>
@@ -240,7 +240,7 @@ interface EntityMeta {
 }
 
 export function Events() {
-  const meta = useQuery({ queryKey: ["meta-index"], queryFn: ({ signal }) => api.get<{ entities: EntityMeta[] }>("/api/meta/", undefined, signal) });
+  const meta = useQuery({ queryKey: ["meta-index"], queryFn: ({ signal }) => api.get<{ entities: EntityMeta[] }>("/api/meta", undefined, signal) });
   const [q, setQ] = useState("");
   const entities = (meta.data?.entities ?? []).filter((e) => e.kind !== "child" && `${e.name} ${e.label}`.toLowerCase().includes(q.toLowerCase()));
   return (
@@ -313,6 +313,8 @@ export function Keys() {
     if (!(await confirmDialog({ title: `Revoke ${k.name}?`, message: "Whatever uses it stops working at once.", confirmLabel: "Revoke", danger: true }))) return;
     try {
       await api.del(`/api/auth/api_keys/${k.id}`);
+      // A key just made and shown goes from the page too once anything is revoked.
+      setMade(null);
       toast("Key revoked");
       void qc.invalidateQueries({ queryKey: ["keys"] });
     } catch (e) {
@@ -330,13 +332,13 @@ export function Keys() {
         }}
       >
         <h2>A new key</h2>
-        <label className="hub-param">
+        <label className="hub-param" htmlFor="key-name">
           <span>What it is for</span>
-          <input className="input" required maxLength={100} value={name} onChange={(e) => setName(e.target.value)} placeholder="Nightly export" />
+          <input id="key-name" className="input" required maxLength={100} value={name} onChange={(e) => setName(e.target.value)} placeholder="Nightly export" />
         </label>
-        <label className="hub-param">
+        <label className="hub-param" htmlFor="key-expires">
           <span>Expires after</span>
-          <select className="select" value={days} onChange={(e) => setDays(e.target.value)}>
+          <select id="key-expires" className="select" value={days} onChange={(e) => setDays(e.target.value)}>
             <option value="30">30 days</option>
             <option value="90">90 days</option>
             <option value="365">a year</option>

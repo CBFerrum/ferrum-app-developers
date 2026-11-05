@@ -44,7 +44,7 @@ shows them only what they may see, and a key they make acts with their rights.
 
 The interface is React with Ferrum-Frontend's kit, built into `ui/dist` and embedded in the crate;
 the Ferrum server compiles the crate in and serves the interface at `/developers/`. It calls
-`/api/openapi.json`, `/api/meta/` and `/api/auth/api_keys`, as anyone's page does.
+`/api/openapi.json`, `/api/meta` and `/api/auth/api_keys`, as anyone's page does.
 
 ## Install
 
