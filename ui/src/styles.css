@@ -1,0 +1,26 @@
+/* The Developer Hub: the kit's tokens, a page of cards, a reference that reads like one. */
+.hub-app { padding: 24px 16px 48px; }
+.hub { max-width: 1040px; margin: 0 auto; display: flex; flex-direction: column; gap: 16px; }
+.hub-head { display: flex; flex-direction: column; gap: 12px; }
+.hub-head h1 { font-size: 1.5rem; margin: 0; }
+.hub-nav { display: flex; flex-wrap: wrap; gap: 4px; border-bottom: 1px solid var(--border); }
+.hub-tab { padding: 8px 12px; color: var(--muted-foreground); text-decoration: none; border-bottom: 2px solid transparent; margin-bottom: -1px; }
+.hub-tab:hover { color: var(--foreground); }
+.hub-tab.active { color: var(--foreground); border-bottom-color: var(--primary); font-weight: 600; }
+.hub-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 16px; }
+.hub-card h2 { font-size: 1rem; margin: 0; }
+.hub-card p { margin: 0; line-height: 1.5; }
+.hub-code { overflow-wrap: anywhere; font-size: 0.85em; background: var(--muted); padding: 1px 4px; border-radius: 4px; }
+.hub-pre { margin: 0; padding: 12px; background: var(--muted); border-radius: 8px; overflow: auto; max-height: 420px; font-size: 0.8rem; white-space: pre-wrap; overflow-wrap: anywhere; }
+.hub-search { max-width: 520px; }
+.hub-tag { font-size: 1rem; margin: 8px 0 0; }
+.hub-ops { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: 8px; }
+.hub-op + .hub-op { border-top: 1px solid var(--border); }
+.hub-op-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; background: none; border: 0; text-align: left; cursor: pointer; color: inherit; font: inherit; }
+.hub-op-head:hover { background: var(--muted); }
+.hub-op-head .mono { overflow-wrap: anywhere; }
+.hub-op-body { padding: 0 12px 12px; }
+.hub-param { display: flex; flex-direction: column; gap: 4px; max-width: 420px; }
+.hub-new-key { max-width: 560px; }
+.hub-new-key h2 { font-size: 1rem; margin: 0; }
+.table td.mono { overflow-wrap: anywhere; }
