@@ -26,7 +26,7 @@ shows them only what they may see, and a key they make acts with their rights.
 | 🧱 Platform | Ferrum `>=0.3.2, <0.4` |
 | 🖥️ Interface | its own, at `/developers/` |
 | 🗃️ Records | none of its own |
-| 🧪 Tests | 1 Rust test, 1 interface test file |
+| 🧪 Tests | 2 Rust tests (one against a real database), 1 interface test file |
 
 ## What it shows
 
@@ -57,6 +57,7 @@ it from Apps.
 app.yaml      the manifest
 src/          the crate: the manifest and the interface, embedded
 ui/           its own interface (React + Vite), built into ui/dist
+tests/        what the hub says, held by the platform it runs on
 CHANGELOG.md  what changed in each version
 ```
 
