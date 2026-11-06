@@ -71,6 +71,7 @@ cd ui && npm run build && npm run check && npm test
 
 | Version | Highlights |
 |---|---|
+| **0.1.2** | Rebuilt with Ferrum-Frontend 24c3951: times on the workspace's clock; drafts headed as drafts. |
 | **0.1.1** | Rebuilt with Ferrum-Frontend bb60115: empty numbers read as the server reads them; settings open as their record. |
 | **0.1.0** | The Developer Hub: an overview of what the workspace offers, its API reference with reads to try, the events each record gives, and the person's API keys. |
 
