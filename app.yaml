@@ -1,6 +1,6 @@
 id: developers
 name: Developer Hub
-version: 0.1.6
+version: 0.1.7
 publisher: cbferrum
 summary: "Build on the workspace: its API reference, the events it gives, and your keys"
 description: README.md

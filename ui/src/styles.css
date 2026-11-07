@@ -16,7 +16,7 @@
 .hub-tag { font-size: 1rem; margin: 8px 0 0; }
 .hub-ops { list-style: none; margin: 0; padding: 0; border: 1px solid var(--border); border-radius: 8px; }
 .hub-op + .hub-op { border-top: 1px solid var(--border); }
-.hub-op-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; background: none; border: 0; text-align: left; cursor: pointer; color: inherit; font: inherit; }
+.hub-op-head { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; width: 100%; padding: 10px 12px; background: none; border: 0; text-align: start; cursor: pointer; color: inherit; font: inherit; }
 .hub-op-head:hover { background: var(--muted); }
 .hub-op-head .mono { overflow-wrap: anywhere; }
 .hub-op-body { padding: 0 12px 12px; }
