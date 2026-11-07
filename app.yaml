@@ -1,6 +1,6 @@
 id: developers
 name: Developer Hub
-version: 0.1.9
+version: 0.1.10
 publisher: cbferrum
 summary: "Build on the workspace: its API reference, the events it gives, and your keys"
 description: README.md
@@ -20,3 +20,14 @@ contributes:
       description: The API, events and keys of this workspace
       icon: plug
       color: "#0f766e"
+  # What the assistant should know in Developer Hub's pages, and what it suggests asking there.
+  shell.assistant:
+    - id: developers
+      title: "Developer Hub"
+      instructions: >-
+        Developer Hub has no records of its own: it shows the workspace's API reference, the events it gives and the
+        person's own keys. For a question about the API, describe the entity (describe_entity) and answer from what
+        that returns. Never show a key's secret.
+      suggestions:
+        - "How do I create a sales invoice through the API?"
+        - "Which events does a Sales Invoice give?"
