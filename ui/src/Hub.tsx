@@ -5,7 +5,7 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { NavLink, useSearchParams } from "react-router";
-import { api, bootstrap, errorMessage, formatDateTime, request } from "@ferrum/client";
+import { api, bootstrap, errorMessage, formatDateTime, request, t } from "@ferrum/client";
 import { Alert, Badge, Button, confirmDialog, EmptyState, ErrorState, PageLoading, toast } from "@ferrum/kit";
 import { operations, requestPath, search, topics, type Operation } from "./openapi";
 
@@ -16,7 +16,7 @@ function Nav() {
     </NavLink>
   );
   return (
-    <nav className="hub-nav" aria-label="Developer Hub">
+    <nav className="hub-nav" aria-label={t("Developer Hub")}>
       {link("/", "Overview")}
       {link("/reference", "API reference")}
       {link("/events", "Events")}
@@ -54,39 +54,37 @@ export function Overview() {
   const origin = typeof location === "undefined" ? "" : location.origin;
   const admin = bootstrap()?.person?.admin ?? false;
   return (
-    <Page title="Developer Hub">
-      <p className="muted">Everything here is this workspace's: its API follows its records and your rights, and so does everything built on it.</p>
+    <Page title={t("Developer Hub")}>
+      <p className="muted">{t("Everything here is this workspace's: its API follows its records and your rights, and so does everything built on it.")}</p>
       <div className="hub-grid">
-        <Card title="The REST API">
+        <Card title={t("The REST API")}>
           <p>
-            Every record you may see, at <Code>{`${origin}/api/v1/{Entity}`}</Code>, with a key or your session. The <NavLink to="/reference">reference</NavLink> lists
-            this workspace's operations; its OpenAPI document is <a href="/api/openapi.json">/api/openapi.json</a>.
+            {t("Every record you may see, at")} <Code>{`${origin}/api/v1/{Entity}`}</Code>{t(", with a key or your session. The")} <NavLink to="/reference">reference</NavLink> {t("lists this workspace's operations; its OpenAPI document is")} <a href="/api/openapi.json">/api/openapi.json</a>.
           </p>
           <pre className="hub-pre">{`curl -H "Authorization: Bearer fk_…" ${origin}/api/v1/Customer?limit=5`}</pre>
         </Card>
-        <Card title="For AI agents">
+        <Card title={t("For AI agents")}>
           <p>
-            The same records and actions over the Model Context Protocol, at <Code>{`${origin}/mcp`}</Code>: an agent signs in with OAuth or a key, and acts with your rights.
+            {t("The same records and actions over the Model Context Protocol, at")} <Code>{`${origin}/mcp`}</Code>{t(": an agent signs in with OAuth or a key, and acts with your rights.")}
           </p>
         </Card>
-        <Card title="Events">
+        <Card title={t("Events")}>
           <p>
-            What changed, as webhooks signed with a secret (<Code>X-Ferrum-Signature</Code>), or to an app that runs on your own servers. The <NavLink to="/events">events</NavLink> page lists
-            each record's topics.
+            {t("What changed, as webhooks signed with a secret (")}<Code>{t("X-Ferrum-Signature")}</Code>{t("), or to an app that runs on your own servers. The")} <NavLink to="/events">events</NavLink> {t("page lists each record's topics.")}
           </p>
-          {admin && <a href="/admin/?tab=webhooks">Webhooks in Administration</a>}
+          {admin && <a href="/admin/?tab=webhooks">{t("Webhooks in Administration")}</a>}
         </Card>
-        <Card title="Apps of your own">
+        <Card title={t("Apps of your own")}>
           <p>
-            Metadata, a sandboxed WebAssembly plugin, or a service on your servers (<Code>runtime: service</Code>): the SDK and its CLI build, sign and publish them to a store.
+            {t("Metadata, a sandboxed WebAssembly plugin, or a service on your servers (")}<Code>{t("runtime: service")}</Code>{t("): the SDK and its CLI build, sign and publish them to a store.")}
           </p>
           <a href="https://github.com/CBFerrum/ferrum-sdk" target="_blank" rel="noreferrer">
             ferrum-sdk
           </a>
         </Card>
-        <Card title="Your keys">
-          <p>A key acts as you, with your rights, until it expires or you revoke it.</p>
-          <NavLink to="/keys">Manage your keys</NavLink>
+        <Card title={t("Your keys")}>
+          <p>{t("A key acts as you, with your rights, until it expires or you revoke it.")}</p>
+          <NavLink to="/keys">{t("Manage your keys")}</NavLink>
         </Card>
       </div>
     </Page>
@@ -128,7 +126,7 @@ function Try({ op }: { op: Operation }) {
       ))}
       <div className="row" style={{ gap: 8 }}>
         <Button type="submit" variant="primary" size="sm" loading={busy} disabled={missing.length > 0}>
-          Send
+          {t("Send")}
         </Button>
         <Code>{path}</Code>
       </div>
@@ -157,9 +155,9 @@ function OperationRow({ op }: { op: Operation }) {
             <table className="table">
               <thead>
                 <tr>
-                  <th>Parameter</th>
-                  <th>In</th>
-                  <th>Type</th>
+                  <th>{t("Parameter")}</th>
+                  <th>{t("In")}</th>
+                  <th>{t("Type")}</th>
                 </tr>
               </thead>
               <tbody>
@@ -176,8 +174,8 @@ function OperationRow({ op }: { op: Operation }) {
               </tbody>
             </table>
           )}
-          {op.body && <p className="muted">Takes a JSON body: the record's fields.</p>}
-          {TRYABLE.has(op.method) ? <Try op={op} /> : <p className="muted">Changes are made from your own code: this page only reads.</p>}
+          {op.body && <p className="muted">{t("Takes a JSON body: the record's fields.")}</p>}
+          {TRYABLE.has(op.method) ? <Try op={op} /> : <p className="muted">{t("Changes are made from your own code: this page only reads.")}</p>}
         </div>
       )}
     </li>
@@ -192,12 +190,12 @@ export function Reference() {
   const found = useMemo(() => search(ops, q), [ops, q]);
   const tags = useMemo(() => [...new Set(found.map((o) => o.tag))], [found]);
   return (
-    <Page title="API reference">
+    <Page title={t("API reference")}>
       <input
         className="input hub-search"
         type="search"
-        placeholder="Find an operation: an entity, a path, an action"
-        aria-label="Find an operation"
+        placeholder={t("Find an operation: an entity, a path, an action")}
+        aria-label={t("Find an operation")}
         value={q}
         onChange={(e) => setParams(e.target.value ? { q: e.target.value } : {}, { replace: true })}
       />
@@ -206,11 +204,11 @@ export function Reference() {
       ) : spec.isError ? (
         <ErrorState error={spec.error} onRetry={() => void spec.refetch()} />
       ) : !found.length ? (
-        <EmptyState title="Nothing matches" />
+        <EmptyState title={t("Nothing matches")} />
       ) : (
         <>
           <p className="muted">
-            {found.length} of {ops.length} operations, for the records you may see.
+            {t("{length} of {length2} operations, for the records you may see.", { length: found.length, length2: ops.length })}
           </p>
           {tags.map((tag) => (
             <section key={tag} className="stack">
@@ -244,13 +242,13 @@ export function Events() {
   const [q, setQ] = useState("");
   const entities = (meta.data?.entities ?? []).filter((e) => e.kind !== "child" && `${e.name} ${e.label}`.toLowerCase().includes(q.toLowerCase()));
   return (
-    <Page title="Events">
+    <Page title={t("Events")}>
       <p className="muted">
-        A webhook or a service app names the topics it hears of: <span className="mono">Entity.event</span>, <span className="mono">Entity.*</span> or{" "}
-        <span className="mono">*</span>. A webhook's delivery carries the record; a service app's names it, and the app reads it with its key.
+        {t("A webhook or a service app names the topics it hears of:")} <span className="mono">{t("Entity.event")}</span>, <span className="mono">{t("Entity.*")}</span> or{" "}
+        <span className="mono">*</span>{t(". A webhook's delivery carries the record; a service app's names it, and the app reads it with its key.")}
       </p>
       <pre className="hub-pre">{`{"entity": "Customer", "id": "…", "event": "created", "actor": "…", "doc": {…}}`}</pre>
-      <input className="input hub-search" type="search" placeholder="Find a record type" aria-label="Find a record type" value={q} onChange={(e) => setQ(e.target.value)} />
+      <input className="input hub-search" type="search" placeholder={t("Find a record type")} aria-label={t("Find a record type")} value={q} onChange={(e) => setQ(e.target.value)} />
       {meta.isPending ? (
         <PageLoading />
       ) : meta.isError ? (
@@ -259,8 +257,8 @@ export function Events() {
         <table className="table">
           <thead>
             <tr>
-              <th>Records</th>
-              <th>Topics</th>
+              <th>{t("Records")}</th>
+              <th>{t("Topics")}</th>
             </tr>
           </thead>
           <tbody>
@@ -315,7 +313,7 @@ export function Keys() {
       await api.del(`/api/auth/api_keys/${k.id}`);
       // A key just made and shown goes from the page too once anything is revoked.
       setMade(null);
-      toast("Key revoked");
+      toast(t("Key revoked"));
       void qc.invalidateQueries({ queryKey: ["keys"] });
     } catch (e) {
       toast(errorMessage(e), "error");
@@ -323,7 +321,7 @@ export function Keys() {
   };
   const live = (keys.data?.keys ?? []).filter((k) => !k.revoked_at);
   return (
-    <Page title="Your keys">
+    <Page title={t("Your keys")}>
       <form
         className="card card-pad stack hub-new-key"
         onSubmit={(e) => {
@@ -331,29 +329,29 @@ export function Keys() {
           create.mutate();
         }}
       >
-        <h2>A new key</h2>
+        <h2>{t("A new key")}</h2>
         <label className="hub-param" htmlFor="key-name">
-          <span>What it is for</span>
-          <input id="key-name" className="input" required maxLength={100} value={name} onChange={(e) => setName(e.target.value)} placeholder="Nightly export" />
+          <span>{t("What it is for")}</span>
+          <input id="key-name" className="input" required maxLength={100} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("Nightly export")} />
         </label>
         <label className="hub-param" htmlFor="key-expires">
-          <span>Expires after</span>
+          <span>{t("Expires after")}</span>
           <select id="key-expires" className="select" value={days} onChange={(e) => setDays(e.target.value)}>
-            <option value="30">30 days</option>
-            <option value="90">90 days</option>
-            <option value="365">a year</option>
+            <option value="30">{t("30 days")}</option>
+            <option value="90">{t("90 days")}</option>
+            <option value="365">{t("a year")}</option>
             <option value="">never</option>
           </select>
         </label>
         <div className="row" style={{ justifyContent: "flex-end" }}>
           <Button type="submit" variant="primary" loading={create.isPending} disabled={!name.trim()}>
-            Make the key
+            {t("Make the key")}
           </Button>
         </div>
         {made && (
           <Alert tone="success">
             <div className="stack">
-              <span>Copy it now: it is not shown again.</span>
+              <span>{t("Copy it now: it is not shown again.")}</span>
               <Code>{made}</Code>
             </div>
           </Alert>
@@ -364,15 +362,15 @@ export function Keys() {
       ) : keys.isError ? (
         <ErrorState error={keys.error} onRetry={() => void keys.refetch()} />
       ) : !live.length ? (
-        <EmptyState title="No keys yet" />
+        <EmptyState title={t("No keys yet")} />
       ) : (
         <table className="table">
           <thead>
             <tr>
-              <th>Key</th>
-              <th>Made</th>
-              <th>Last used</th>
-              <th>Expires</th>
+              <th>{t("Key")}</th>
+              <th>{t("Made")}</th>
+              <th>{t("Last used")}</th>
+              <th>{t("Expires")}</th>
               <th />
             </tr>
           </thead>
@@ -387,7 +385,7 @@ export function Keys() {
                 <td>{k.expires_at ? formatDateTime(k.expires_at) : "never"}</td>
                 <td>
                   <Button size="sm" variant="danger" onClick={() => void revoke(k)} aria-label={`Revoke ${k.name}`}>
-                    Revoke
+                    {t("Revoke")}
                   </Button>
                 </td>
               </tr>
