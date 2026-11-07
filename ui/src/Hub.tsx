@@ -5,22 +5,22 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { NavLink, useSearchParams } from "react-router";
-import { api, bootstrap, errorMessage, formatDateTime, request, t } from "@ferrum/client";
+import { api, bootstrap, errorMessage, formatDateTime, request, t, isolate } from "@ferrum/client";
 import { Alert, Badge, Button, confirmDialog, EmptyState, ErrorState, PageLoading, toast } from "@ferrum/kit";
 import { operations, requestPath, search, topics, type Operation } from "./openapi";
 
 function Nav() {
   const link = (to: string, label: string) => (
     <NavLink to={to} end className={({ isActive }) => (isActive ? "hub-tab active" : "hub-tab")}>
-      {label}
+      {isolate(label)}
     </NavLink>
   );
   return (
     <nav className="hub-nav" aria-label={t("Developer Hub")}>
-      {link("/", "Overview")}
-      {link("/reference", "API reference")}
-      {link("/events", "Events")}
-      {link("/keys", "Your keys")}
+      {link("/", t("Overview"))}
+      {link("/reference", t("API reference"))}
+      {link("/events", t("Events"))}
+      {link("/keys", t("Your keys"))}
     </nav>
   );
 }
@@ -29,7 +29,7 @@ export function Page({ title, children }: { title: string; children: ReactNode }
   return (
     <div className="hub">
       <header className="hub-head">
-        <h1>{title}</h1>
+        <h1>{isolate(title)}</h1>
         <Nav />
       </header>
       {children}
@@ -40,14 +40,14 @@ export function Page({ title, children }: { title: string; children: ReactNode }
 function Card({ title, children }: { title: string; children: ReactNode }) {
   return (
     <section className="card card-pad stack hub-card">
-      <h2>{title}</h2>
+      <h2>{isolate(title)}</h2>
       {children}
     </section>
   );
 }
 
 function Code({ children }: { children: string }) {
-  return <code className="mono hub-code">{children}</code>;
+  return <code className="mono hub-code">{isolate(children)}</code>;
 }
 
 export function Overview() {
@@ -59,18 +59,18 @@ export function Overview() {
       <div className="hub-grid">
         <Card title={t("The REST API")}>
           <p>
-            {t("Every record you may see, at")} <Code>{`${origin}/api/v1/{Entity}`}</Code>{t(", with a key or your session. The")} <NavLink to="/reference">reference</NavLink> {t("lists this workspace's operations; its OpenAPI document is")} <a href="/api/openapi.json">/api/openapi.json</a>.
+            {t("Every record you may see, at")} <Code>{isolate(`${origin}/api/v1/{Entity}`)}</Code>{t(", with a key or your session. The")} <NavLink to="/reference">{t("reference")}</NavLink> {t("lists this workspace's operations; its OpenAPI document is")} <a href="/api/openapi.json">{t("/api/openapi.json")}</a>.
           </p>
-          <pre className="hub-pre">{`curl -H "Authorization: Bearer fk_…" ${origin}/api/v1/Customer?limit=5`}</pre>
+          <pre className="hub-pre">{t("curl -H \"Authorization: Bearer fk_…\" {origin}/api/v1/Customer?limit=5", { origin })}</pre>
         </Card>
         <Card title={t("For AI agents")}>
           <p>
-            {t("The same records and actions over the Model Context Protocol, at")} <Code>{`${origin}/mcp`}</Code>{t(": an agent signs in with OAuth or a key, and acts with your rights.")}
+            {t("The same records and actions over the Model Context Protocol, at")} <Code>{t("{origin}/mcp", { origin })}</Code>{t(": an agent signs in with OAuth or a key, and acts with your rights.")}
           </p>
         </Card>
         <Card title={t("Events")}>
           <p>
-            {t("What changed, as webhooks signed with a secret (")}<Code>{t("X-Ferrum-Signature")}</Code>{t("), or to an app that runs on your own servers. The")} <NavLink to="/events">events</NavLink> {t("page lists each record's topics.")}
+            {t("What changed, as webhooks signed with a secret (")}<Code>{t("X-Ferrum-Signature")}</Code>{t("), or to an app that runs on your own servers. The")} <NavLink to="/events">{t("events")}</NavLink> {t("page lists each record's topics.")}
           </p>
           {admin && <a href="/admin/?tab=webhooks">{t("Webhooks in Administration")}</a>}
         </Card>
@@ -79,7 +79,7 @@ export function Overview() {
             {t("Metadata, a sandboxed WebAssembly plugin, or a service on your servers (")}<Code>{t("runtime: service")}</Code>{t("): the SDK and its CLI build, sign and publish them to a store.")}
           </p>
           <a href="https://github.com/CBFerrum/ferrum-sdk" target="_blank" rel="noreferrer">
-            ferrum-sdk
+            {t("ferrum-sdk")}
           </a>
         </Card>
         <Card title={t("Your keys")}>
@@ -119,7 +119,7 @@ function Try({ op }: { op: Operation }) {
       {fields.map((p) => (
         <label key={`${p.in}.${p.name}`} className="hub-param">
           <span>
-            {p.name} <span className="muted">{p.in}{p.required ? ", required" : ""}</span>
+            {isolate(p.name)} <span className="muted">{isolate(p.in)}{p.required ? t(", required") : ""}</span>
           </span>
           <input className="input" aria-label={p.name} value={values[p.name] ?? ""} onChange={(e) => setValues({ ...values, [p.name]: e.target.value })} />
         </label>
@@ -128,12 +128,12 @@ function Try({ op }: { op: Operation }) {
         <Button type="submit" variant="primary" size="sm" loading={busy} disabled={missing.length > 0}>
           {t("Send")}
         </Button>
-        <Code>{path}</Code>
+        <Code>{isolate(path)}</Code>
       </div>
       {result && (
         <div className="stack">
-          <span className="muted">{result.status === "200" ? "The answer, as you would get it:" : "Refused:"}</span>
-          <pre className="hub-pre">{result.body}</pre>
+          <span className="muted">{result.status === "200" ? t("The answer, as you would get it:") : t("Refused:")}</span>
+          <pre className="hub-pre">{isolate(result.body)}</pre>
         </div>
       )}
     </form>
@@ -145,9 +145,9 @@ function OperationRow({ op }: { op: Operation }) {
   return (
     <li className="hub-op">
       <button type="button" className="hub-op-head" aria-expanded={open} onClick={() => setOpen(!open)}>
-        <Badge tone={op.method === "GET" ? "blue" : op.method === "DELETE" ? "red" : "green"}>{op.method}</Badge>
-        <span className="mono">{op.path}</span>
-        {op.summary && <span className="muted">{op.summary}</span>}
+        <Badge tone={op.method === "GET" ? "blue" : op.method === "DELETE" ? "red" : "green"}>{isolate(op.method)}</Badge>
+        <span className="mono">{isolate(op.path)}</span>
+        {op.summary && <span className="muted">{isolate(op.summary)}</span>}
       </button>
       {open && (
         <div className="hub-op-body stack">
@@ -164,10 +164,10 @@ function OperationRow({ op }: { op: Operation }) {
                 {op.parameters.map((p) => (
                   <tr key={`${p.in}.${p.name}`}>
                     <td className="mono">
-                      {p.name}
+                      {isolate(p.name)}
                       {p.required ? " *" : ""}
                     </td>
-                    <td>{p.in}</td>
+                    <td>{isolate(p.in)}</td>
                     <td>{p.schema?.format ?? p.schema?.type ?? ""}</td>
                   </tr>
                 ))}
@@ -212,7 +212,7 @@ export function Reference() {
           </p>
           {tags.map((tag) => (
             <section key={tag} className="stack">
-              <h2 className="hub-tag">{tag}</h2>
+              <h2 className="hub-tag">{isolate(tag)}</h2>
               <ul className="hub-ops">
                 {found
                   .filter((o) => o.tag === tag)
@@ -244,10 +244,10 @@ export function Events() {
   return (
     <Page title={t("Events")}>
       <p className="muted">
-        {t("A webhook or a service app names the topics it hears of:")} <span className="mono">{t("Entity.event")}</span>, <span className="mono">{t("Entity.*")}</span> or{" "}
+        {t("A webhook or a service app names the topics it hears of:")} <span className="mono">{t("Entity.event")}</span>, <span className="mono">{t("Entity.*")}</span> {t("or")}{isolate(" ")}
         <span className="mono">*</span>{t(". A webhook's delivery carries the record; a service app's names it, and the app reads it with its key.")}
       </p>
-      <pre className="hub-pre">{`{"entity": "Customer", "id": "…", "event": "created", "actor": "…", "doc": {…}}`}</pre>
+      <pre className="hub-pre">{isolate(`{"entity": "Customer", "id": "…", "event": "created", "actor": "…", "doc": {…}}`)}</pre>
       <input className="input hub-search" type="search" placeholder={t("Find a record type")} aria-label={t("Find a record type")} value={q} onChange={(e) => setQ(e.target.value)} />
       {meta.isPending ? (
         <PageLoading />
@@ -264,8 +264,8 @@ export function Events() {
           <tbody>
             {entities.map((e) => (
               <tr key={e.name}>
-                <td>{e.label}</td>
-                <td className="mono">{topics(e.name, !!e.submittable).join("  ")}</td>
+                <td>{isolate(e.label)}</td>
+                <td className="mono">{isolate(topics(e.name, !!e.submittable).join("  "))}</td>
               </tr>
             ))}
           </tbody>
@@ -308,7 +308,7 @@ export function Keys() {
     onError: (e) => toast(errorMessage(e), "error"),
   });
   const revoke = async (k: Key) => {
-    if (!(await confirmDialog({ title: `Revoke ${k.name}?`, message: "Whatever uses it stops working at once.", confirmLabel: "Revoke", danger: true }))) return;
+    if (!(await confirmDialog({ title: t("Revoke {name}?", { name: k.name }), message: t("Whatever uses it stops working at once."), confirmLabel: t("Revoke"), danger: true }))) return;
     try {
       await api.del(`/api/auth/api_keys/${k.id}`);
       // A key just made and shown goes from the page too once anything is revoked.
@@ -340,7 +340,7 @@ export function Keys() {
             <option value="30">{t("30 days")}</option>
             <option value="90">{t("90 days")}</option>
             <option value="365">{t("a year")}</option>
-            <option value="">never</option>
+            <option value="">{t("never")}</option>
           </select>
         </label>
         <div className="row" style={{ justifyContent: "flex-end" }}>
@@ -352,7 +352,7 @@ export function Keys() {
           <Alert tone="success">
             <div className="stack">
               <span>{t("Copy it now: it is not shown again.")}</span>
-              <Code>{made}</Code>
+              <Code>{isolate(made)}</Code>
             </div>
           </Alert>
         )}
@@ -378,13 +378,13 @@ export function Keys() {
             {live.map((k) => (
               <tr key={k.id}>
                 <td>
-                  {k.name} <span className="mono muted">{k.prefix}</span> {k.scope && <Badge>{k.scope}</Badge>}
+                  {isolate(k.name)} <span className="mono muted">{isolate(k.prefix)}</span> {k.scope && <Badge>{isolate(k.scope)}</Badge>}
                 </td>
-                <td>{formatDateTime(k.created_at)}</td>
-                <td>{k.last_used_at ? formatDateTime(k.last_used_at) : "never"}</td>
-                <td>{k.expires_at ? formatDateTime(k.expires_at) : "never"}</td>
+                <td>{isolate(formatDateTime(k.created_at))}</td>
+                <td>{k.last_used_at ? formatDateTime(k.last_used_at) : t("never")}</td>
+                <td>{k.expires_at ? formatDateTime(k.expires_at) : t("never")}</td>
                 <td>
-                  <Button size="sm" variant="danger" onClick={() => void revoke(k)} aria-label={`Revoke ${k.name}`}>
+                  <Button size="sm" variant="danger" onClick={() => void revoke(k)} aria-label={t("Revoke {name}", { name: k.name })}>
                     {t("Revoke")}
                   </Button>
                 </td>
