@@ -6,7 +6,7 @@ import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { NavLink, useSearchParams } from "react-router";
 import { api, bootstrap, errorMessage, formatDateTime, request, t, isolate } from "@ferrum/client";
-import { Alert, Badge, Button, confirmDialog, EmptyState, ErrorState, PageLoading, toast } from "@ferrum/kit";
+import { Alert, Badge, Button, confirmDialog, EmptyState, ErrorState, PageLoading, toast, placed } from "@ferrum/kit";
 import { operations, requestPath, search, topics, type Operation } from "./openapi";
 
 function Nav() {
@@ -70,16 +70,16 @@ export function Overview() {
         </Card>
         <Card title={t("Events")}>
           <p>
-            {t("What changed, as webhooks signed with a secret (")}<Code>{t("X-Ferrum-Signature")}</Code>{t("), or to an app that runs on your own servers. The")} <NavLink to="/events">{t("events")}</NavLink> {t("page lists each record's topics.")}
+            {placed(t("What changed, as webhooks signed with a secret ({header}), or to an app that runs on your own servers. The {events} page lists each record's topics."), { header: <Code>X-Ferrum-Signature</Code>, events: <NavLink to="/events">{t("events")}</NavLink> })}
           </p>
           {admin && <a href="/admin/?tab=webhooks">{t("Webhooks in Administration")}</a>}
         </Card>
         <Card title={t("Apps of your own")}>
           <p>
-            {t("Metadata, a sandboxed WebAssembly plugin, or a service on your servers (")}<Code>{t("runtime: service")}</Code>{t("): the SDK and its CLI build, sign and publish them to a store.")}
+            {placed(t("Metadata, a sandboxed WebAssembly plugin, or a service on your servers ({runtime}): the SDK and its CLI build, sign and publish them to a store."), { runtime: <Code>runtime: service</Code> })}
           </p>
           <a href="https://github.com/CBFerrum/ferrum-sdk" target="_blank" rel="noreferrer">
-            {t("ferrum-sdk")}
+            ferrum-sdk
           </a>
         </Card>
         <Card title={t("Your keys")}>
@@ -244,8 +244,7 @@ export function Events() {
   return (
     <Page title={t("Events")}>
       <p className="muted">
-        {t("A webhook or a service app names the topics it hears of:")} <span className="mono">{t("Entity.event")}</span>, <span className="mono">{t("Entity.*")}</span> {t("or")}{isolate(" ")}
-        <span className="mono">*</span>{t(". A webhook's delivery carries the record; a service app's names it, and the app reads it with its key.")}
+        {t("A webhook or a service app names the topics it hears of:")} <span className="mono">{t("Entity.event")}</span>, {placed(t("{p1} or {p2}. A webhook's delivery carries the record; a service app's names it, and the app reads it with its key."), { p1: <span className="mono">{t("Entity.*")}</span>, p2: <span className="mono">*</span> })}
       </p>
       <pre className="hub-pre">{isolate(`{"entity": "Customer", "id": "…", "event": "created", "actor": "…", "doc": {…}}`)}</pre>
       <input className="input hub-search" type="search" placeholder={t("Find a record type")} aria-label={t("Find a record type")} value={q} onChange={(e) => setQ(e.target.value)} />
