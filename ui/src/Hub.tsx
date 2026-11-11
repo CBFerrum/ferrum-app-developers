@@ -4,35 +4,35 @@
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
-import { NavLink, useSearchParams } from "react-router";
+import { NavLink, useLocation, useNavigate, useSearchParams } from "react-router";
 import { ApiError, api, bootstrap, errorMessage, formatDateTime, request, t, isolate } from "@ferrum/client";
-import { Alert, Badge, Button, confirmDialog, ListSkeleton, StatePanel, TableSkeleton, toast, placed } from "@ferrum/kit";
+import { Badge, Button, confirmDialog, Field, ListSkeleton, StatePanel, TableSkeleton, TabPanel, Tabs, toast, placed } from "@ferrum/kit";
 import { operations, requestPath, search, topics, type Operation } from "./openapi";
 
-function Nav() {
-  const link = (to: string, label: string) => (
-    <NavLink to={to} end className={({ isActive }) => (isActive ? "hub-tab active" : "hub-tab")}>
-      {isolate(label)}
-    </NavLink>
-  );
-  return (
-    <nav className="hub-nav" aria-label={t("Developer Hub")}>
-      {link("/", t("Overview"))}
-      {link("/reference", t("API reference"))}
-      {link("/events", t("Events"))}
-      {link("/keys", t("Your keys"))}
-    </nav>
-  );
-}
+// The hub's four pages, as the kit's tabs: the address is the tab, so a page can be linked to and reloaded.
+const PAGES = [
+  { id: "/", label: () => t("Overview") },
+  { id: "/reference", label: () => t("API reference") },
+  { id: "/events", label: () => t("Events") },
+  { id: "/keys", label: () => t("Your keys") },
+];
 
-export function Page({ title, children }: { title: string; children: ReactNode }) {
+export function Page({ sub, children }: { sub?: ReactNode; children: ReactNode }) {
+  const navigate = useNavigate();
+  const { pathname } = useLocation();
+  const tab = PAGES.find((p) => p.id !== "/" && pathname.startsWith(p.id))?.id ?? "/";
   return (
     <div className="hub">
-      <header className="hub-head">
-        <h1>{isolate(title)}</h1>
-        <Nav />
+      <header className="page-head">
+        <div>
+          <h1 className="page-title">{t("Developer Hub")}</h1>
+          {sub && <p className="page-sub hub-sub">{sub}</p>}
+        </div>
       </header>
-      {children}
+      <Tabs id="hub" tabs={PAGES.map((p) => ({ id: p.id, label: p.label() }))} value={tab} onChange={(id) => void navigate(id)} />
+      <TabPanel id="hub" tab={tab}>
+        <div className="stack">{children}</div>
+      </TabPanel>
     </div>
   );
 }
@@ -56,18 +56,32 @@ function Code({ children }: { children: string }) {
   return <code className="mono hub-code">{isolate(children)}</code>;
 }
 
+// A sample to copy: a calm mono block, reachable by keyboard when it scrolls, with its copy button.
+function CodeBlock({ text }: { text: string }) {
+  const copy = () => void navigator.clipboard?.writeText(text).then(() => toast(t("Copied")), () => toast(t("Select it and copy it"), "error"));
+  return (
+    <div className="hub-code-block">
+      <pre className="code" tabIndex={0}>
+        {isolate(text)}
+      </pre>
+      <Button size="sm" variant="ghost" icon="copy" className="hub-copy" onClick={copy}>
+        {t("Copy")}
+      </Button>
+    </div>
+  );
+}
+
 export function Overview() {
   const origin = typeof location === "undefined" ? "" : location.origin;
   const admin = bootstrap()?.person?.admin ?? false;
   return (
-    <Page title={t("Developer Hub")}>
-      <p className="muted">{t("Everything here is this workspace's: its API follows its records and your rights, and so does everything built on it.")}</p>
+    <Page sub={t("Everything here is this workspace's: its API follows its records and your rights, and so does everything built on it.")}>
       <div className="hub-grid">
         <Card title={t("The REST API")}>
           <p>
             {t("Every record you may see, at")} <Code>{isolate(`${origin}/api/v1/{Entity}`)}</Code>{t(", with a key or your session. The")} <NavLink to="/reference">{t("reference")}</NavLink> {t("lists this workspace's operations; its OpenAPI document is")} <a href="/api/openapi.json">{t("/api/openapi.json")}</a>.
           </p>
-          <pre className="hub-pre">{t("curl -H \"Authorization: Bearer fk_…\" {origin}/api/v1/Customer?limit=5", { origin })}</pre>
+          <CodeBlock text={t("curl -H \"Authorization: Bearer fk_…\" {origin}/api/v1/Customer?limit=5", { origin })} />
         </Card>
         <Card title={t("For AI agents")}>
           <p>
@@ -121,16 +135,24 @@ function Try({ op }: { op: Operation }) {
   };
   const fields = op.parameters.filter((p) => p.in === "path" || p.in === "query");
   return (
-    <form className="stack hub-try" onSubmit={run}>
-      {fields.map((p) => (
-        <label key={`${p.in}.${p.name}`} className="hub-param">
-          <span>
-            {isolate(p.name)} <span className="muted">{isolate(p.in)}{p.required ? t(", required") : ""}</span>
-          </span>
-          <input className="input" aria-label={p.name} value={values[p.name] ?? ""} onChange={(e) => setValues({ ...values, [p.name]: e.target.value })} />
-        </label>
-      ))}
-      <div className="row" style={{ gap: 8 }}>
+    <form className="stack" onSubmit={run}>
+      {fields.length > 0 && (
+        <div className="hub-params">
+          {fields.map((p) => (
+            <Field
+              key={`${p.in}.${p.name}`}
+              label={
+                <>
+                  {isolate(p.name)} <span className="faint">{isolate(p.in)}{p.required ? t(", required") : ""}</span>
+                </>
+              }
+            >
+              <input className="input" value={values[p.name] ?? ""} onChange={(e) => setValues({ ...values, [p.name]: e.target.value })} />
+            </Field>
+          ))}
+        </div>
+      )}
+      <div className="row">
         <Button type="submit" variant="primary" size="sm" loading={busy} disabled={missing.length > 0}>
           {t("Send")}
         </Button>
@@ -139,7 +161,7 @@ function Try({ op }: { op: Operation }) {
       {result && (
         <div className="stack">
           <span className="muted">{result.status === "200" ? t("The answer, as you would get it:") : t("Refused:")}</span>
-          <pre className="hub-pre">{isolate(result.body)}</pre>
+          <CodeBlock text={result.body} />
         </div>
       )}
     </form>
@@ -158,6 +180,7 @@ function OperationRow({ op }: { op: Operation }) {
       {open && (
         <div className="hub-op-body stack">
           {op.parameters.length > 0 && (
+            <div className="table-wrap" role="region" aria-label={t("Parameter")} tabIndex={0}>
             <table className="table">
               <thead>
                 <tr>
@@ -179,6 +202,7 @@ function OperationRow({ op }: { op: Operation }) {
                 ))}
               </tbody>
             </table>
+            </div>
           )}
           {op.body && <p className="muted">{t("Takes a JSON body: the record's fields.")}</p>}
           {TRYABLE.has(op.method) ? <Try op={op} /> : <p className="muted">{t("Changes are made from your own code: this page only reads.")}</p>}
@@ -196,7 +220,7 @@ export function Reference() {
   const found = useMemo(() => search(ops, q), [ops, q]);
   const tags = useMemo(() => [...new Set(found.map((o) => o.tag))], [found]);
   return (
-    <Page title={t("API reference")}>
+    <Page>
       <input
         className="input hub-search"
         type="search"
@@ -213,11 +237,11 @@ export function Reference() {
         q ? <StatePanel kind="no-matches" title={t("Nothing matches")} onClear={() => setParams({}, { replace: true })} clearLabel={t("Clear the search")} /> : <StatePanel kind="empty" title={t("Nothing matches")} />
       ) : (
         <>
-          <p className="muted">
+          <p className="muted text-sm">
             {t("{length} of {length2} operations, for the records you may see.", { length: found.length, length2: ops.length })}
           </p>
           {tags.map((tag) => (
-            <section key={tag} className="stack">
+            <section key={tag} className="stack hub-tag-section">
               <h2 className="hub-tag">{isolate(tag)}</h2>
               <ul className="hub-ops">
                 {found
@@ -248,17 +272,18 @@ export function Events() {
   const [q, setQ] = useState("");
   const entities = (meta.data?.entities ?? []).filter((e) => e.kind !== "child" && `${e.name} ${e.label}`.toLowerCase().includes(q.toLowerCase()));
   return (
-    <Page title={t("Events")}>
+    <Page>
       <p className="muted">
         {t("A webhook or a service app names the topics it hears of:")} <span className="mono">{t("Entity.event")}</span>, {placed(t("{p1} or {p2}. A webhook's delivery carries the record; a service app's names it, and the app reads it with its key."), { p1: <span className="mono">{t("Entity.*")}</span>, p2: <span className="mono">*</span> })}
       </p>
-      <pre className="hub-pre">{isolate(`{"entity": "Customer", "id": "…", "event": "created", "actor": "…", "doc": {…}}`)}</pre>
+      <CodeBlock text={`{"entity": "Customer", "id": "…", "event": "created", "actor": "…", "doc": {…}}`} />
       <input className="input hub-search" type="search" placeholder={t("Find a record type")} aria-label={t("Find a record type")} value={q} onChange={(e) => setQ(e.target.value)} />
       {meta.isPending ? (
         <TableSkeleton columns={2} />
       ) : meta.isError ? (
         <Failed error={meta.error} onRetry={() => void meta.refetch()} />
       ) : (
+        <div className="table-wrap card" role="region" aria-label={t("Events")} tabIndex={0}>
         <table className="table">
           <thead>
             <tr>
@@ -275,6 +300,7 @@ export function Events() {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </Page>
   );
@@ -326,41 +352,43 @@ export function Keys() {
   };
   const live = (keys.data?.keys ?? []).filter((k) => !k.revoked_at);
   return (
-    <Page title={t("Your keys")}>
+    <Page>
       <form
-        className="card card-pad stack hub-new-key"
+        className="card hub-new-key"
         onSubmit={(e) => {
           e.preventDefault();
           create.mutate();
         }}
       >
-        <h2>{t("A new key")}</h2>
-        <label className="hub-param" htmlFor="key-name">
-          <span>{t("What it is for")}</span>
-          <input id="key-name" className="input" required maxLength={100} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("Nightly export")} />
-        </label>
-        <label className="hub-param" htmlFor="key-expires">
-          <span>{t("Expires after")}</span>
-          <select id="key-expires" className="select" value={days} onChange={(e) => setDays(e.target.value)}>
-            <option value="30">{t("30 days")}</option>
-            <option value="90">{t("90 days")}</option>
-            <option value="365">{t("a year")}</option>
-            <option value="">{t("never")}</option>
-          </select>
-        </label>
-        <div className="row" style={{ justifyContent: "flex-end" }}>
-          <Button type="submit" variant="primary" loading={create.isPending} disabled={!name.trim()}>
-            {t("Make the key")}
-          </Button>
+        <div className="card-head">
+          <h2>{t("A new key")}</h2>
         </div>
-        {made && (
-          <Alert tone="success">
-            <div className="stack">
+        <div className="card-body stack">
+          <div className="hub-params">
+            <Field label={t("What it is for")} htmlFor="key-name">
+              <input id="key-name" className="input" required maxLength={100} value={name} onChange={(e) => setName(e.target.value)} placeholder={t("Nightly export")} />
+            </Field>
+            <Field label={t("Expires after")} htmlFor="key-expires">
+              <select id="key-expires" className="select" value={days} onChange={(e) => setDays(e.target.value)}>
+                <option value="30">{t("30 days")}</option>
+                <option value="90">{t("90 days")}</option>
+                <option value="365">{t("a year")}</option>
+                <option value="">{t("never")}</option>
+              </select>
+            </Field>
+          </div>
+          <div className="row">
+            <Button type="submit" variant="primary" loading={create.isPending} disabled={!name.trim()}>
+              {t("Make the key")}
+            </Button>
+          </div>
+          {made && (
+            <div className="stack" role="status">
               <span>{t("Copy it now: it is not shown again.")}</span>
-              <Code>{isolate(made)}</Code>
+              <CodeBlock text={made} />
             </div>
-          </Alert>
-        )}
+          )}
+        </div>
       </form>
       {keys.isPending ? (
         <TableSkeleton columns={5} rows={3} />
@@ -369,6 +397,7 @@ export function Keys() {
       ) : !live.length ? (
         <StatePanel kind="empty" title={t("No keys yet")} />
       ) : (
+        <div className="table-wrap card" role="region" aria-label={t("Your keys")} tabIndex={0}>
         <table className="table">
           <thead>
             <tr>
@@ -376,7 +405,7 @@ export function Keys() {
               <th>{t("Made")}</th>
               <th>{t("Last used")}</th>
               <th>{t("Expires")}</th>
-              <th />
+              <th aria-label={t("Revoke")} />
             </tr>
           </thead>
           <tbody>
@@ -385,9 +414,9 @@ export function Keys() {
                 <td>
                   {isolate(k.name)} <span className="mono muted">{isolate(k.prefix)}</span> {k.scope && <Badge>{isolate(k.scope)}</Badge>}
                 </td>
-                <td>{isolate(formatDateTime(k.created_at))}</td>
-                <td>{k.last_used_at ? formatDateTime(k.last_used_at) : t("never")}</td>
-                <td>{k.expires_at ? formatDateTime(k.expires_at) : t("never")}</td>
+                <td className="nowrap">{isolate(formatDateTime(k.created_at))}</td>
+                <td className="nowrap">{k.last_used_at ? formatDateTime(k.last_used_at) : t("never")}</td>
+                <td className="nowrap">{k.expires_at ? formatDateTime(k.expires_at) : t("never")}</td>
                 <td>
                   <Button size="sm" variant="danger" onClick={() => void revoke(k)} aria-label={t("Revoke {name}", { name: k.name })}>
                     {t("Revoke")}
@@ -397,6 +426,7 @@ export function Keys() {
             ))}
           </tbody>
         </table>
+        </div>
       )}
     </Page>
   );
