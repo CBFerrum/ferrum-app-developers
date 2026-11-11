@@ -5,8 +5,8 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { NavLink, useSearchParams } from "react-router";
-import { api, bootstrap, errorMessage, formatDateTime, request, t, isolate } from "@ferrum/client";
-import { Alert, Badge, Button, confirmDialog, EmptyState, ErrorState, PageLoading, toast, placed } from "@ferrum/kit";
+import { ApiError, api, bootstrap, errorMessage, formatDateTime, request, t, isolate } from "@ferrum/client";
+import { Alert, Badge, Button, confirmDialog, ListSkeleton, StatePanel, TableSkeleton, toast, placed } from "@ferrum/kit";
 import { operations, requestPath, search, topics, type Operation } from "./openapi";
 
 function Nav() {
@@ -35,6 +35,12 @@ export function Page({ title, children }: { title: string; children: ReactNode }
       {children}
     </div>
   );
+}
+
+// A failed read said why: refused (403) is not shown as an error, no connection (0) is offline.
+function Failed({ error, onRetry }: { error: unknown; onRetry: () => void }) {
+  const status = error instanceof ApiError ? error.status : -1;
+  return <StatePanel kind={status === 403 ? "denied" : status === 0 ? "offline" : "failed"} error={error} onRetry={onRetry} />;
 }
 
 function Card({ title, children }: { title: string; children: ReactNode }) {
@@ -200,11 +206,11 @@ export function Reference() {
         onChange={(e) => setParams(e.target.value ? { q: e.target.value } : {}, { replace: true })}
       />
       {spec.isPending ? (
-        <PageLoading />
+        <ListSkeleton />
       ) : spec.isError ? (
-        <ErrorState error={spec.error} onRetry={() => void spec.refetch()} />
+        <Failed error={spec.error} onRetry={() => void spec.refetch()} />
       ) : !found.length ? (
-        <EmptyState title={t("Nothing matches")} />
+        q ? <StatePanel kind="no-matches" title={t("Nothing matches")} onClear={() => setParams({}, { replace: true })} clearLabel={t("Clear the search")} /> : <StatePanel kind="empty" title={t("Nothing matches")} />
       ) : (
         <>
           <p className="muted">
@@ -249,9 +255,9 @@ export function Events() {
       <pre className="hub-pre">{isolate(`{"entity": "Customer", "id": "…", "event": "created", "actor": "…", "doc": {…}}`)}</pre>
       <input className="input hub-search" type="search" placeholder={t("Find a record type")} aria-label={t("Find a record type")} value={q} onChange={(e) => setQ(e.target.value)} />
       {meta.isPending ? (
-        <PageLoading />
+        <TableSkeleton columns={2} />
       ) : meta.isError ? (
-        <ErrorState error={meta.error} onRetry={() => void meta.refetch()} />
+        <Failed error={meta.error} onRetry={() => void meta.refetch()} />
       ) : (
         <table className="table">
           <thead>
@@ -357,11 +363,11 @@ export function Keys() {
         )}
       </form>
       {keys.isPending ? (
-        <PageLoading />
+        <TableSkeleton columns={5} rows={3} />
       ) : keys.isError ? (
-        <ErrorState error={keys.error} onRetry={() => void keys.refetch()} />
+        <Failed error={keys.error} onRetry={() => void keys.refetch()} />
       ) : !live.length ? (
-        <EmptyState title={t("No keys yet")} />
+        <StatePanel kind="empty" title={t("No keys yet")} />
       ) : (
         <table className="table">
           <thead>
