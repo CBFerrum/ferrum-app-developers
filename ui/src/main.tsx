@@ -7,7 +7,7 @@ import { StrictMode, useEffect } from "react";
 import { createRoot } from "react-dom/client";
 import { createBrowserRouter, Link, Outlet, RouterProvider, useRouteError } from "react-router";
 import { addCatalogs, routeBase, shell, t, wordsReady } from "@ferrum/client";
-import { ConfirmHost, EmptyState, ErrorState, Toaster } from "@ferrum/kit";
+import { ConfirmHost, FormSkeleton, StatePanel, Toaster } from "@ferrum/kit";
 import { Events, Keys, Overview, Reference } from "./Hub";
 import "./styles.css";
 
@@ -28,14 +28,14 @@ function Frame() {
 }
 
 function RouteError() {
-  return <ErrorState error={useRouteError()} onRetry={() => window.location.reload()} />;
+  return <StatePanel kind="failed" error={useRouteError()} onRetry={() => window.location.reload()} />;
 }
 
 function NotFound() {
   return (
-    <EmptyState title={t("Page not found")}>
+    <StatePanel kind="empty" title={t("Page not found")}>
       <Link to="/">{t("Go to the Developer Hub")}</Link>
-    </EmptyState>
+    </StatePanel>
   );
 }
 
@@ -45,7 +45,7 @@ const router = createBrowserRouter(
       path: "/",
       element: <Frame />,
       errorElement: <RouteError />,
-      hydrateFallbackElement: <span />,
+      hydrateFallbackElement: <FormSkeleton />,
       children: [
         { index: true, element: <Overview /> },
         { path: "reference", element: <Reference /> },
