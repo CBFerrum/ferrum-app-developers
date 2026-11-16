@@ -2,21 +2,13 @@
 // workspace offers someone building on it, its API reference, the events it gives and the
 // person's keys. Everything it shows comes from the platform's own APIs, as the person.
 
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { StrictMode, useEffect } from "react";
-import { createRoot } from "react-dom/client";
-import { createBrowserRouter, Link, Outlet, RouterProvider, useRouteError } from "react-router";
-import { addCatalogs, routeBase, shell, t, wordsReady } from "@ferrum/client";
-import { ConfirmHost, FormSkeleton, StatePanel, Toaster } from "@ferrum/kit";
+import { useEffect } from "react";
+import { Link, Outlet, useRouteError } from "react-router";
+import { shell, t } from "@ferrum/client";
+import { FormSkeleton, StatePanel } from "@ferrum/kit";
+import { mountApp } from "@ferrum/records/frame";
 import { Events, Keys, Overview, Reference } from "./Hub";
 import "./styles.css";
-
-// Its own words in the page's language (src/locales), fetched as the page starts; it is drawn once they are in.
-void addCatalogs({ ar: () => import("./locales/ar.json"), hi: () => import("./locales/hi.json") });
-
-const queryClient = new QueryClient({
-  defaultOptions: { queries: { retry: false, refetchOnWindowFocus: false, staleTime: 30_000 } },
-});
 
 function Frame() {
   useEffect(() => shell().ready(), []);
@@ -39,8 +31,10 @@ function NotFound() {
   );
 }
 
-const router = createBrowserRouter(
-  [
+mountApp({
+  route: "developers",
+  catalogs: { ar: () => import("./locales/ar.json"), hi: () => import("./locales/hi.json") },
+  routes: [
     {
       path: "/",
       element: <Frame />,
@@ -55,18 +49,4 @@ const router = createBrowserRouter(
       ],
     },
   ],
-  { basename: routeBase("developers") },
-);
-
-// Drawn once the page's words are in (its language's catalogs, fetched as the page starts).
-void wordsReady().then(() =>
-  createRoot(document.getElementById("root")!).render(
-    <StrictMode>
-      <QueryClientProvider client={queryClient}>
-        <RouterProvider router={router} />
-        <Toaster />
-        <ConfirmHost />
-      </QueryClientProvider>
-    </StrictMode>,
-  ),
-);
+});
