@@ -38,7 +38,7 @@ The Developer Hub is where someone who writes code against a workspace begins. I
 | | |
 |---|---|
 | 📦 Version | `0.1.14` |
-| 🧱 Kind | Own interface at `/developers/` |
+| 🧱 Kind | Own interface at `/developers/`, embedded in a crate that has no packages, hooks, reports or upkeep |
 | 🗃️ What it adds | No entities, no roles, no reports, no print formats, no menus of records, no upkeep |
 | 🔗 Depends on | Ferrum `>=0.3.2, <0.4` |
 | 🤝 Works with | Every app: it documents whatever records the workspace has |
