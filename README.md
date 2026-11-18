@@ -7,7 +7,7 @@
 
 <br>
 
-[![Version](https://img.shields.io/badge/version-0.1.14-0f766e?style=flat-square)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.2.0-0f766e?style=flat-square)](CHANGELOG.md)
 [![Licence: AGPL-3.0](https://img.shields.io/badge/licence-AGPL--3.0-blue?style=flat-square)](LICENSE)
 [![Ferrum platform](https://img.shields.io/badge/runs%20on-Ferrum-2f5bea?style=flat-square)](https://github.com/CBFerrum/Ferrum)
 ![Rust](https://img.shields.io/badge/Rust-server-b7410e?style=flat-square&logo=rust)
@@ -40,7 +40,7 @@ The Developer Hub is where someone who writes code against a workspace begins. I
 | 📦 Version | `0.1.14` |
 | 🧱 Kind | Own interface at `/developers/`, embedded in a crate that has no packages, hooks, reports or upkeep |
 | 🗃️ What it adds | No entities, no roles, no reports, no print formats, no menus of records, no upkeep |
-| 🔗 Depends on | Ferrum `>=0.3.2, <0.4` |
+| 🔗 Depends on | Ferrum `>=0.4.0, <0.5` |
 | 🤝 Works with | Every app: it documents whatever records the workspace has |
 | 🌍 Languages | English, Arabic and Hindi (translated by a model, to be reviewed by native speakers) |
 | 🧪 Tests | 2 Rust tests (one against a real PostgreSQL), 4 interface tests |
@@ -212,6 +212,7 @@ Notes: the platform's keys can carry a scope and the hub shows it, but the hub m
 
 ### ✅ Recently shipped
 
+- [x] **0.2.0**: Upkeep runs one workspace at a time, on whichever replica is free.
 - [x] **0.1.14** Rebuilt on Ferrum-Frontend 06bd1a2: its start through `mountApp`.
 - [x] **0.1.13** Rebuilt on the tuned design system: better menu icons, a lighter first page, a visible scroll cue, cleaner print.
 - [x] **0.1.12** The redesigned interface: the kit's tabs, cards with headings, code samples with a Copy button, shaped loading and told-apart states.
