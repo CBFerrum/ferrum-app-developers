@@ -11,6 +11,7 @@ build = "build.rs"
 ferrum-kernel = { git = "https://github.com/CBFerrum/Ferrum", branch = "main" }
 ferrum-meta = { git = "https://github.com/CBFerrum/Ferrum", branch = "main" }
 ferrum-domain = { git = "https://github.com/CBFerrum/Ferrum", branch = "main" }
+uuid = { version = "1.10", features = ["v4", "v7", "serde"] }
 
 [dev-dependencies]
 ferrum-apps = { git = "https://github.com/CBFerrum/Ferrum", branch = "main" }
