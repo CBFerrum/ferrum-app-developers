@@ -35,6 +35,13 @@ describe("the reference", () => {
     expect(requestPath(op, { id: "a b", fields: "name, email" })).toEqual({ path: "/api/v1/Customer/a%20b?fields=name%2C%20email", missing: [] });
   });
 
+  it("refuses . and .. as a path value, so a value cannot walk out of the operation's address", () => {
+    const op = operations(spec).find((o) => o.id === "get /api/v1/Customer/{id}")!;
+    expect(requestPath(op, { id: ".." }).missing).toEqual(["id"]);
+    expect(requestPath(op, { id: " . " }).missing).toEqual(["id"]);
+    expect(requestPath(op, { id: "..a" }).missing).toEqual([]);
+  });
+
   it("takes a path item's parameters, the operation's winning", () => {
     const ops = operations({
       paths: {

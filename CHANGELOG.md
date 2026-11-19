@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.4.0
+
+Needs the same platform as 0.2.0. No database change. Interface rebuilt.
+
+- **Try a change.** The reference sends a create, an update, or an action whose contract says it changes records only
+  inside the workspace (`transactional_action`, `query`, `pure`), from a body that starts as the required fields to
+  fill (an action's required parameters, a secret one never filled in) and, for an update, the record's version
+  (`If-Match`). Send asks first, naming the operation, the record, the action's own warning and that it is real; the
+  request then goes once, as the signed-in person, through the route the record screens use, with an
+  `Idempotency-Key` kept while the request stays the same. A body that is not JSON is refused before anything is asked.
+  Nothing typed is kept in the browser's storage.
+- **Not run from here:** a delete, a submit, a cancel, an amend, and an action that reaches outside the workspace or
+  says nothing of what it does. The record screens ask no more than a plain confirmation, so the page says to use them.
+- A path value of `.` or `..` is not taken, so a value cannot move the request off the operation's address.
+
 ## 0.3.0
 
 Needs the same platform as 0.2.0. No database change. Interface rebuilt.

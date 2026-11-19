@@ -5,10 +5,10 @@
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useId, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { NavLink, useLocation, useNavigate, useSearchParams } from "react-router";
-import { ApiError, api, bootstrap, errorMessage, formatDateTime, request, t, isolate } from "@ferrum/client";
+import { ApiError, api, bootstrap, errorMessage, formatDateTime, newKey, request, t, isolate } from "@ferrum/client";
 import { Badge, Button, confirmDialog, Field, ListSkeleton, StatePanel, TableSkeleton, TabPanel, Tabs, toast, placed } from "@ferrum/kit";
 import { operations, requestPath, search, topics, type Operation } from "./openapi";
-import { LANGS, sample, sampleRequest, type Lang } from "./samples";
+import { LANGS, sample, sampleRequest, skeleton, type Lang } from "./samples";
 
 // The hub's four pages, as the kit's tabs: the address is the tab, so a page can be linked to and reloaded.
 const PAGES = [
@@ -134,19 +134,98 @@ export function Overview() {
 
 // ── API reference ──
 
-const TRYABLE = new Set(["GET"]);
+// ── trying an operation ──
 
-function Try({ op, values, setValues }: { op: Operation; values: Record<string, string>; setValues: (v: Record<string, string>) => void }) {
+/** An action as `/api/meta/{Entity}` describes it (crates/meta ActionDef): what the reference needs to decide. */
+interface ActionMeta {
+  name: string;
+  label: string;
+  confirm?: string;
+  hidden?: boolean;
+  params?: { name: string; type?: string; required?: boolean; secret?: boolean }[];
+  contract?: { effect?: string };
+}
+
+// Changes the reference runs: those that change records only inside this workspace. The record screens ask no
+// more than a plain confirmation of anything, so what reaches outside, may move money or removes a record (an
+// action whose contract says `external_effect` or says nothing, a submit, a cancel, an amend, a delete) is not run
+// from here: the record's own screen does it, with what it shows first.
+const INSIDE = new Set(["transactional_action", "query", "pure"]);
+
+type Kind = { kind: "read" } | { kind: "create" | "update"; entity: string } | { kind: "action"; entity: string; action: string } | { kind: "elsewhere" };
+
+function kindOf(op: Operation): Kind {
+  if (!op.path.startsWith("/api/")) return { kind: "elsewhere" };
+  if (op.method === "GET") return { kind: "read" };
+  const [, api, v1, entity, id, actions, action] = op.path.split("/");
+  if (api !== "api" || v1 !== "v1" || !entity) return { kind: "elsewhere" };
+  if (op.method === "POST" && id === undefined) return { kind: "create", entity };
+  if (op.method === "PATCH" && id && actions === undefined) return { kind: "update", entity };
+  if (op.method === "POST" && actions === "actions" && action) return { kind: "action", entity, action };
+  return { kind: "elsewhere" };
+}
+
+/** Required parameters of an action, each empty; a secret one is never filled in. */
+function actionBody(a: ActionMeta): Record<string, unknown> {
+  return Object.fromEntries((a.params ?? []).filter((p) => p.required && !p.secret).map((p) => [p.name, p.type === "int" ? 0 : ""]));
+}
+
+function Elsewhere() {
+  return <p className="muted">{t("This one is not run from here: it may reach outside the workspace, move money or remove a record. Use the record's own screen.")}</p>;
+}
+
+function Try(props: { op: Operation; values: Record<string, string>; setValues: (v: Record<string, string>) => void }) {
+  const k = kindOf(props.op);
+  const meta = useQuery({
+    queryKey: ["meta", k.kind === "action" ? k.entity : ""],
+    queryFn: ({ signal }) => api.get<{ actions?: ActionMeta[] }>(`/api/meta/${encodeURIComponent(k.kind === "action" ? k.entity : "")}`, undefined, signal),
+    enabled: k.kind === "action",
+  });
+  if (k.kind === "elsewhere") return <Elsewhere />;
+  if (k.kind !== "action") return <TryForm {...props} kind={k} body={k.kind === "read" ? undefined : skeleton(props.op.bodySchema)} />;
+  if (meta.isPending) return <ListSkeleton />;
+  const action = meta.data?.actions?.find((a) => a.name === k.action);
+  if (!action || action.hidden || !INSIDE.has(action.contract?.effect ?? "")) return <Elsewhere />;
+  return <TryForm {...props} kind={k} action={action} body={actionBody(action)} />;
+}
+
+function TryForm({ op, values, setValues, kind, action, body: start }: { op: Operation; values: Record<string, string>; setValues: (v: Record<string, string>) => void; kind: Kind; action?: ActionMeta; body?: unknown }) {
+  const change = kind.kind !== "read";
+  // The body lives here only, never in the browser's storage: a secret typed into it goes when the row closes.
+  const [text, setText] = useState(() => (start === undefined ? "" : JSON.stringify(start, null, 2)));
+  const [version, setVersion] = useState("");
+  const [bodyError, setBodyError] = useState<string | null>(null);
   const [result, setResult] = useState<{ status: string; body: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const { path, missing } = requestPath(op, values);
+  // One request, one key: the same request sent again is answered once by the server; any change makes it another.
+  const key = useMemo(() => newKey(), [op.id, path, text, version]);
   const run = async (e: FormEvent) => {
     e.preventDefault();
+    setBodyError(null);
+    let body: unknown;
+    if (start !== undefined) {
+      try {
+        body = JSON.parse(text);
+      } catch (err) {
+        setBodyError(t("The body is not JSON: {message}", { message: err instanceof Error ? err.message : String(err) }));
+        return;
+      }
+    }
+    if (change) {
+      const entity = "entity" in kind ? kind.entity : "";
+      const real =
+        kind.kind === "create"
+          ? t("This is real: it makes a {entity} in this workspace, as you, as its own screen would.", { entity })
+          : t("This is real: it changes {entity} {id} in this workspace, as you, as its own screen would.", { entity, id: values.id ?? "" });
+      const title = action?.label ?? (op.summary || `${op.method} ${op.path}`);
+      if (!(await confirmDialog({ title, message: action?.confirm ? `${real} ${action.confirm}` : real, confirmLabel: t("Run it") }))) return;
+    }
     setBusy(true);
     try {
-      const body = await request<unknown>(path);
-      const text = typeof body === "string" ? body : JSON.stringify(body, null, 2);
-      setResult({ status: "200", body: text.length > 20_000 ? `${text.slice(0, 20_000)}\n…` : text });
+      const answer = await request<unknown>(path, { method: op.method, body, idempotencyKey: change ? key : undefined, ifMatch: version.trim() ? Number(version) : undefined });
+      const shown = answer === undefined ? "" : typeof answer === "string" ? answer : JSON.stringify(answer, null, 2);
+      setResult({ status: "200", body: shown.length > 20_000 ? `${shown.slice(0, 20_000)}\n…` : shown });
     } catch (err) {
       setResult({ status: "error", body: errorMessage(err) });
     } finally {
@@ -156,7 +235,7 @@ function Try({ op, values, setValues }: { op: Operation; values: Record<string, 
   const fields = op.parameters.filter((p) => p.in === "path" || p.in === "query");
   return (
     <form className="stack" onSubmit={run}>
-      {fields.length > 0 && (
+      {(fields.length > 0 || kind.kind === "update") && (
         <div className="hub-params">
           {fields.map((p) => (
             <Field
@@ -167,16 +246,27 @@ function Try({ op, values, setValues }: { op: Operation; values: Record<string, 
                 </>
               }
             >
-              <input className="input" value={values[p.name] ?? ""} onChange={(e) => setValues({ ...values, [p.name]: e.target.value })} />
+              <input className="input" name={p.name} value={values[p.name] ?? ""} onChange={(e) => setValues({ ...values, [p.name]: e.target.value })} />
             </Field>
           ))}
+          {kind.kind === "update" && (
+            <Field label={t("The record's version (If-Match)")}>
+              <input className="input" name="if-match" inputMode="numeric" value={version} onChange={(e) => setVersion(e.target.value)} />
+            </Field>
+          )}
         </div>
       )}
+      {start !== undefined && (
+        <Field label={t("Body (JSON)")} error={bodyError ?? undefined}>
+          <textarea className="input mono" rows={8} spellCheck={false} value={text} onChange={(e) => setText(e.target.value)} />
+        </Field>
+      )}
+      {change && <p className="muted">{t("Sending runs it for real, as you: it is not a test.")}</p>}
       <div className="row">
         <Button type="submit" variant="primary" size="sm" loading={busy} disabled={missing.length > 0}>
           {t("Send")}
         </Button>
-        <Code>{isolate(path)}</Code>
+        <Code>{isolate(`${op.method} ${path}`)}</Code>
       </div>
       {result && (
         <div className="stack">
@@ -228,7 +318,7 @@ function OperationRow({ op }: { op: Operation }) {
           )}
           {op.body && <p className="muted">{t("Takes a JSON body: the record's fields.")}</p>}
           <Samples op={op} values={values} />
-          {TRYABLE.has(op.method) ? <Try op={op} values={values} setValues={setValues} /> : <p className="muted">{t("Changes are made from your own code: this page only reads.")}</p>}
+          <Try op={op} values={values} setValues={setValues} />
         </div>
       )}
     </li>

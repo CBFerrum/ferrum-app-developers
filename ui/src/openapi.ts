@@ -89,7 +89,8 @@ export function requestPath(op: Operation, values: Record<string, string>): { pa
   const missing: string[] = [];
   let path = op.path.replace(/\{([^}]+)\}/g, (_, name: string) => {
     const v = values[name]?.trim();
-    if (!v) {
+    // "." and ".." would walk the address out of the operation's own (a/b/../c is a/c): not a value.
+    if (!v || v === "." || v === "..") {
       missing.push(name);
       return `{${name}}`;
     }

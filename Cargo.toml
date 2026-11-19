@@ -1,6 +1,6 @@
 [package]
 name = "ferrum-app-developers"
-version = "0.3.0"
+version = "0.4.0"
 edition = "2024"
 license = "AGPL-3.0-only"
 description = "The Developer Hub: the workspace's API reference, the events it gives, and people's API keys"
