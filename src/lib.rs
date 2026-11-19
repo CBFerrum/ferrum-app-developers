@@ -51,7 +51,7 @@ mod tests {
 
     #[test]
     fn the_versions_agree() {
-        let v = ferrum_apps::AppManifest::parse(MANIFEST).expect("app.yaml").version;
+        let v = ferrum_apps::AppManifest::parse(MANIFEST).expect("app.yaml").version.to_string();
         assert_eq!(env!("CARGO_PKG_VERSION"), v, "Cargo.toml and app.yaml");
         let readme = include_str!("../README.md");
         assert!(readme.contains(&format!("version-{v}-")) && readme.contains(&format!("| `{v}` |")), "README's badge and At a glance say {v}");

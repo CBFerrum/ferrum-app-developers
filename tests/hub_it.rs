@@ -71,7 +71,8 @@ async fn scenario() {
     assert_eq!(topics, ["Customer.created", "Customer.updated", "Customer.deleted"]);
 
     // ── and the platform's own list of a record's topics is the Events page's (ui/src/openapi.ts topics) ──
-    let mut listed: Vec<String> = k.events(&admin).iter().filter(|e| e["entity"] == "Customer").filter_map(|e| e["topic"].as_str().map(str::to_string)).collect();
+    let mut listed: Vec<String> =
+        k.events(&admin).iter().filter(|e| e["entity"] == "Customer").filter_map(|e| e["topic"].as_str().map(str::to_string)).collect();
     listed.sort();
     assert_eq!(listed, ["Customer.created", "Customer.deleted", "Customer.opened", "Customer.updated"]);
 }
