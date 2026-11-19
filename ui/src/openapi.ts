@@ -20,8 +20,17 @@ export interface Operation {
   body: boolean;
 }
 
+interface SpecOperation {
+  tags?: string[];
+  summary?: string;
+  operationId?: string;
+  parameters?: Parameter[];
+  requestBody?: unknown;
+}
+
 interface Spec {
-  paths?: Record<string, Record<string, { tags?: string[]; summary?: string; operationId?: string; parameters?: Parameter[]; requestBody?: unknown }>>;
+  /** A path item: its methods, and parameters every method of the path shares (a record's `id`). */
+  paths?: Record<string, { parameters?: Parameter[] } & Partial<Record<string, SpecOperation | Parameter[]>>>;
 }
 
 const METHODS = ["get", "post", "put", "patch", "delete"];
@@ -30,16 +39,20 @@ const METHODS = ["get", "post", "put", "patch", "delete"];
 export function operations(spec: Spec): Operation[] {
   const out: Operation[] = [];
   for (const [path, item] of Object.entries(spec.paths ?? {})) {
+    const shared = item.parameters ?? [];
     for (const method of METHODS) {
-      const op = item[method];
+      const op = item[method] as SpecOperation | undefined;
       if (!op) continue;
+      // The operation's own parameter replaces the path item's of the same name and place (OpenAPI 3.1).
+      const own = op.parameters ?? [];
+      const parameters = [...shared.filter((p) => !own.some((o) => o.name === p.name && o.in === p.in)), ...own];
       out.push({
         id: `${method} ${path}`,
         method: method.toUpperCase(),
         path,
         tag: op.tags?.[0] ?? "Other",
         summary: op.summary ?? "",
-        parameters: op.parameters ?? [],
+        parameters,
         body: op.requestBody !== undefined,
       });
     }
@@ -72,8 +85,10 @@ export function requestPath(op: Operation, values: Record<string, string>): { pa
   return { path, missing };
 }
 
-/** The events a record of `entity` gives (`Entity.event`), which webhooks and service apps name. */
-export const EVENTS = ["created", "updated", "deleted", "submitted", "cancelled"] as const;
+/** The events a record of `entity` gives (`Entity.event`), which webhooks and service apps name: as the platform
+ * lists them (`Kernel::events`), but for `transitioned`, which only records with a workflow give and the meta index
+ * does not say. `opened`: a signed link to the record first acted on. */
+export const EVENTS = ["created", "updated", "deleted", "opened", "submitted", "cancelled"] as const;
 
 export function topics(entity: string, submittable: boolean): string[] {
   return EVENTS.filter((e) => submittable || (e !== "submitted" && e !== "cancelled")).map((e) => `${entity}.${e}`);

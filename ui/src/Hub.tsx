@@ -277,6 +277,7 @@ export function Events() {
         {t("A webhook or a service app names the topics it hears of:")} <span className="mono">{t("Entity.event")}</span>, {placed(t("{p1} or {p2}. A webhook's delivery carries the record; a service app's names it, and the app reads it with its key."), { p1: <span className="mono">{t("Entity.*")}</span>, p2: <span className="mono">*</span> })}
       </p>
       <CodeBlock text={`{"entity": "Customer", "id": "…", "event": "created", "actor": "…", "doc": {…}}`} />
+      <p className="muted">{placed(t("A record with a workflow also gives {topic} when it moves from one state to another."), { topic: <Code>Entity.transitioned</Code> })}</p>
       <input className="input hub-search" type="search" placeholder={t("Find a record type")} aria-label={t("Find a record type")} value={q} onChange={(e) => setQ(e.target.value)} />
       {meta.isPending ? (
         <TableSkeleton columns={2} />
@@ -351,6 +352,8 @@ export function Keys() {
     }
   };
   const live = (keys.data?.keys ?? []).filter((k) => !k.revoked_at);
+  // An expired key stays listed (revoking it is still allowed) but says it no longer works.
+  const expired = (k: Key) => !!k.expires_at && Date.parse(k.expires_at) <= Date.now();
   return (
     <Page>
       <form
@@ -412,7 +415,7 @@ export function Keys() {
             {live.map((k) => (
               <tr key={k.id}>
                 <td>
-                  {isolate(k.name)} <span className="mono muted">{isolate(k.prefix)}</span> {k.scope && <Badge>{isolate(k.scope)}</Badge>}
+                  {isolate(k.name)} <span className="mono muted">{isolate(k.prefix)}</span> {k.scope && <Badge>{isolate(k.scope)}</Badge>} {expired(k) && <Badge tone="red">{t("Expired")}</Badge>}
                 </td>
                 <td className="nowrap">{isolate(formatDateTime(k.created_at))}</td>
                 <td className="nowrap">{k.last_used_at ? formatDateTime(k.last_used_at) : t("never")}</td>

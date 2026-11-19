@@ -1,5 +1,20 @@
 # Changelog
 
+## 0.2.1
+
+Needs the same platform as 0.2.0. No database change. Interface rebuilt.
+
+- **A record can be tried by its id.** The workspace's API document puts a record's `id` on the path, shared by its
+  methods; the reference read only each method's own parameters, so `GET /api/v1/{Entity}/{id}` had no `id` field
+  and Send never enabled. A path's parameters are now taken with the operation's (the operation's own winning).
+- **Every topic a record gives.** The Events page names `Entity.opened` for every record, as the platform lists it,
+  and says that a record with a workflow also gives `Entity.transitioned`. A test holds the page's list to the
+  platform's.
+- **An expired key says so.** It stays in the list, marked Expired, until it is revoked.
+- **One version.** `Cargo.toml`, `app.yaml` and the README all say 0.2.1 (the README said 0.1.14), and a test keeps
+  them together.
+- The route table moved to `ui/src/routes.tsx`, so the interface's tests mount the real one.
+
 ## 0.2.0
 
 Needs Ferrum 0.4.0 (apps' upkeep runs one workspace at a time, on whichever replica is free).

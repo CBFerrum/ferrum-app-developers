@@ -48,4 +48,12 @@ mod tests {
         assert!(UI.iter().any(|(p, _)| *p == "index.html") && !UI.iter().any(|(p, _)| p.starts_with('.')), "{}", ui.digest);
         assert!(packages().unwrap().is_empty());
     }
+
+    #[test]
+    fn the_versions_agree() {
+        let v = ferrum_apps::AppManifest::parse(MANIFEST).expect("app.yaml").version;
+        assert_eq!(env!("CARGO_PKG_VERSION"), v, "Cargo.toml and app.yaml");
+        let readme = include_str!("../README.md");
+        assert!(readme.contains(&format!("version-{v}-")) && readme.contains(&format!("| `{v}` |")), "README's badge and At a glance say {v}");
+    }
 }

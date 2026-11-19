@@ -7,13 +7,13 @@
 
 <br>
 
-[![Version](https://img.shields.io/badge/version-0.2.0-0f766e?style=flat-square)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.2.1-0f766e?style=flat-square)](CHANGELOG.md)
 [![Licence: AGPL-3.0](https://img.shields.io/badge/licence-AGPL--3.0-blue?style=flat-square)](LICENSE)
 [![Ferrum platform](https://img.shields.io/badge/runs%20on-Ferrum-2f5bea?style=flat-square)](https://github.com/CBFerrum/Ferrum)
 ![Rust](https://img.shields.io/badge/Rust-server-b7410e?style=flat-square&logo=rust)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-data-336791?style=flat-square&logo=postgresql&logoColor=white)
 ![React](https://img.shields.io/badge/React-TypeScript-0ea5e9?style=flat-square&logo=react&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-2%20Rust%20%2B%204%20UI-16a34a?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-3%20Rust%20%2B%208%20UI-16a34a?style=flat-square)
 
 ### Start building on your Ferrum workspace: its API reference, its events and your keys, in one place.
 
@@ -37,13 +37,13 @@ The Developer Hub is where someone who writes code against a workspace begins. I
 
 | | |
 |---|---|
-| 📦 Version | `0.1.14` |
+| 📦 Version | `0.2.1` |
 | 🧱 Kind | Own interface at `/developers/`, embedded in a crate that has no packages, hooks, reports or upkeep |
 | 🗃️ What it adds | No entities, no roles, no reports, no print formats, no menus of records, no upkeep |
 | 🔗 Depends on | Ferrum `>=0.4.0, <0.5` |
 | 🤝 Works with | Every app: it documents whatever records the workspace has |
 | 🌍 Languages | English, Arabic and Hindi (translated by a model, to be reviewed by native speakers) |
-| 🧪 Tests | 2 Rust tests (one against a real PostgreSQL), 4 interface tests |
+| 🧪 Tests | 3 Rust tests (one against a real PostgreSQL), 8 interface tests (two mount the real route table) |
 | 📄 Licence | AGPL-3.0-only |
 
 ## 📸 Screenshots
@@ -98,23 +98,23 @@ Four tabs run along the top (Overview, API reference, Events, Your keys). The ad
 - **Read from your workspace.** It loads `/api/openapi.json`, which is built from the workspace's metadata, so it lists the records the signed-in person may see.
 - **Grouped and sorted.** Operations are grouped by record type (tag) and sorted by tag, path and method. A badge shows the method: blue for GET, red for DELETE, green for the others.
 - **Search.** Type words such as an entity, a path or an action. An operation matches when its tag, path, summary or method holds every word. The search is kept in the address (`?q=`), so a result can be shared. A line says "N of M operations".
-- **Parameters.** Each operation opens to a table of its parameters: name (a `*` marks a required one), where it goes (path or query) and type. An operation that takes a body says it takes the record's fields as JSON.
+- **Parameters.** Each operation opens to a table of its parameters, the path's own (a record's `id`) and the operation's: name (a `*` marks a required one), where it goes (path or query) and type. An operation that takes a body says it takes the record's fields as JSON.
 - **Try a read.** For GET operations, fill the path and query parameters and press Send. The request goes from your session, so you get the answer you would get. Send waits until every path parameter has a value, the request path is shown as it will go, and long answers are cut at 20,000 characters.
 - **Writes are not sent from here.** For POST, PUT, PATCH and DELETE the page says changes are made from your own code.
 - **Honest states.** Loading shows skeletons; a refusal (403) shows as denied, no connection as offline, and anything else as failed with a retry; no match offers to clear the search.
 
 ### 📣 Events
 
-- **Topics by record type.** A webhook or a service app names the topics it hears: `Customer.created`, `Customer.updated`, `Customer.deleted`, and for records that are submitted, `submitted` and `cancelled` too. Child records, which are never on their own, are left out.
+- **Topics by record type.** A webhook or a service app names the topics it hears: `Customer.created`, `Customer.updated`, `Customer.deleted`, `Customer.opened` (a signed link to the record first acted on), and for records that are submitted, `submitted` and `cancelled` too. A line says that a record with a workflow also gives `Entity.transitioned`. Child records, which are never on their own, are left out.
 - **What a delivery carries.** A sample shows the shape: entity, id, event, actor and the record. A webhook's delivery carries the record; a service app's names it, and the app reads it.
 - **Find a record type.** A search box filters by name or label.
-- **Held by the platform.** A test makes, updates and deletes a customer and checks that the platform records exactly the topics this page names.
+- **Held by the platform.** A test makes, updates and deletes a customer and checks that the platform records exactly those topics, and that the platform's own list of a customer's topics is the one this page names.
 
 ### 🔑 Your keys
 
 - **Make a key.** Name it ("Nightly export"), choose when it expires (30 days, 90 days, a year, or never; 90 is the default) and press Make the key.
 - **Shown once.** The secret appears with a Copy button and the line "Copy it now: it is not shown again." It leaves the page when anything is revoked.
-- **Your list.** Each live key shows its name, its prefix, a scope badge if it has one, when it was made, when it was last used and when it expires.
+- **Your list.** Each live key shows its name, its prefix, a scope badge if it has one, when it was made, when it was last used and when it expires. A key past its expiry says Expired; it stays listed until it is revoked.
 - **Revoke.** A confirmation says whatever uses the key stops working at once. Revoked keys leave the list.
 - **Rights, tested.** A test shows that a key acts as its maker (an administrator's key writes customers), that a key made by a person with no rights on customers has none either, that keys are made for oneself only, and that a revoked key stops at once.
 
@@ -212,6 +212,7 @@ Notes: the platform's keys can carry a scope and the hub shows it, but the hub m
 
 ### ✅ Recently shipped
 
+- [x] **0.2.1** A record can be tried by its id; the Events page names `opened` and `transitioned`; an expired key says so; one version everywhere.
 - [x] **0.2.0**: Upkeep runs one workspace at a time, on whichever replica is free.
 - [x] **0.1.14** Rebuilt on Ferrum-Frontend 06bd1a2: its start through `mountApp`.
 - [x] **0.1.13** Rebuilt on the tuned design system: better menu icons, a lighter first page, a visible scroll cue, cleaner print.
@@ -265,7 +266,7 @@ CI runs `cargo fmt -- --check`, `cargo clippy --all-targets -- -D warnings` and 
 ```text
 app.yaml      the manifest
 src/          the crate: the manifest and the interface, embedded
-ui/src/       Hub.tsx (the four pages), openapi.ts (operations, search, request paths, topics), locales
+ui/src/       routes.tsx (the route table), Hub.tsx (the four pages), openapi.ts (operations, search, request paths, topics), locales; *.test.ts(x) and testkit.tsx (the route table mounted)
 ui/dist/      the built interface, committed and embedded
 tests/        hub_it.rs: what the hub says, held by the platform it runs on
 build.rs      embeds ui/dist
