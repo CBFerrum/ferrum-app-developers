@@ -45,7 +45,6 @@
   "Whatever uses it stops working at once.": "इसका उपयोग करने वाला हर चीज़ तुरंत काम करना बंद कर देती है।",
   "Your keys": "आपकी कुंजियाँ",
   "a year": "एक वर्ष",
-  "curl -H \"Authorization: Bearer fk_…\" {origin}/api/v1/Customer?limit=5": "curl -H \"Authorization: Bearer fk_…\" {origin}/api/v1/Customer?limit=5",
   "events": "इवेंट",
   "lists this workspace's operations; its OpenAPI document is": "इस कार्यक्षेत्र के ऑपरेशन सूचीबद्ध करता है; इसका OpenAPI दस्तावेज़ है",
   "reference": "संदर्भ",

@@ -10,6 +10,18 @@ export interface Parameter {
   schema?: { type?: string; format?: string; enum?: unknown[] };
 }
 
+/** A JSON Schema as the workspace's document writes one (server/src/openapi.rs `field_schema`). */
+export interface Schema {
+  type?: string | string[];
+  format?: string;
+  enum?: unknown[];
+  readOnly?: boolean;
+  writeOnly?: boolean;
+  properties?: Record<string, Schema>;
+  required?: string[];
+  $ref?: string;
+}
+
 export interface Operation {
   id: string;
   method: string;
@@ -18,6 +30,8 @@ export interface Operation {
   summary: string;
   parameters: Parameter[];
   body: boolean;
+  /** The JSON body's schema, a `$ref` to the document's components resolved. */
+  bodySchema?: Schema;
 }
 
 interface SpecOperation {
@@ -25,10 +39,11 @@ interface SpecOperation {
   summary?: string;
   operationId?: string;
   parameters?: Parameter[];
-  requestBody?: unknown;
+  requestBody?: { content?: Record<string, { schema?: Schema }> };
 }
 
 interface Spec {
+  components?: { schemas?: Record<string, Schema> };
   /** A path item: its methods, and parameters every method of the path shares (a record's `id`). */
   paths?: Record<string, { parameters?: Parameter[] } & Partial<Record<string, SpecOperation | Parameter[]>>>;
 }
@@ -38,6 +53,7 @@ const METHODS = ["get", "post", "put", "patch", "delete"];
 /** Every operation of a document, sorted by tag, then path, then method. */
 export function operations(spec: Spec): Operation[] {
   const out: Operation[] = [];
+  const resolve = (s?: Schema) => (s?.$ref ? spec.components?.schemas?.[s.$ref.replace("#/components/schemas/", "")] : s);
   for (const [path, item] of Object.entries(spec.paths ?? {})) {
     const shared = item.parameters ?? [];
     for (const method of METHODS) {
@@ -54,6 +70,7 @@ export function operations(spec: Spec): Operation[] {
         summary: op.summary ?? "",
         parameters,
         body: op.requestBody !== undefined,
+        bodySchema: resolve(op.requestBody?.content?.["application/json"]?.schema),
       });
     }
   }

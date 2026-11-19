@@ -45,7 +45,6 @@
   "Whatever uses it stops working at once.": "يتوقف كل ما يستخدمه عن العمل فورًا.",
   "Your keys": "مفاتيحك",
   "a year": "سنة",
-  "curl -H \"Authorization: Bearer fk_…\" {origin}/api/v1/Customer?limit=5": "curl -H \"Authorization: Bearer fk_…\" {origin}/api/v1/Customer?limit=5",
   "events": "الأحداث",
   "lists this workspace's operations; its OpenAPI document is": "يسرد عمليات مساحة العمل هذه؛ ووثيقة OpenAPI الخاصة بها هي",
   "reference": "المرجع",

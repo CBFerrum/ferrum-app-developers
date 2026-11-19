@@ -44,6 +44,25 @@ describe("the reference", () => {
   });
 });
 
+describe("code samples", () => {
+  it("an operation shows its sample in the language chosen", async () => {
+    answers["/api/openapi.json"] = {
+      paths: { "/api/v1/Customer": { post: { tags: ["Customer"], requestBody: { content: { "application/json": { schema: { $ref: "#/components/schemas/Customer" } } } } } } },
+      components: { schemas: { Customer: { type: "object", properties: { customer_name: { type: "string" } }, required: ["customer_name"] } } },
+    };
+    const { host, close } = await open("/reference");
+    await click(button(host, "POST/api/v1/Customer"));
+    const code = () => host.querySelector(".hub-op-body pre")?.textContent ?? "";
+    expect(code()).toContain("curl -X POST");
+    expect(code()).toContain('"customer_name": ""');
+    await click(button(host, "Python"));
+    expect(code()).toContain('requests.request("POST"');
+    await click(button(host, "JavaScript"));
+    expect(code()).toContain("await fetch(");
+    await close();
+  });
+});
+
 describe("your keys", () => {
   it("an expired key says so", async () => {
     const { host, close } = await open("/keys");

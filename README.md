@@ -7,13 +7,13 @@
 
 <br>
 
-[![Version](https://img.shields.io/badge/version-0.2.1-0f766e?style=flat-square)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-0.3.0-0f766e?style=flat-square)](CHANGELOG.md)
 [![Licence: AGPL-3.0](https://img.shields.io/badge/licence-AGPL--3.0-blue?style=flat-square)](LICENSE)
 [![Ferrum platform](https://img.shields.io/badge/runs%20on-Ferrum-2f5bea?style=flat-square)](https://github.com/CBFerrum/Ferrum)
 ![Rust](https://img.shields.io/badge/Rust-server-b7410e?style=flat-square&logo=rust)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-data-336791?style=flat-square&logo=postgresql&logoColor=white)
 ![React](https://img.shields.io/badge/React-TypeScript-0ea5e9?style=flat-square&logo=react&logoColor=white)
-![Tests](https://img.shields.io/badge/tests-3%20Rust%20%2B%208%20UI-16a34a?style=flat-square)
+![Tests](https://img.shields.io/badge/tests-3%20Rust%20%2B%2015%20UI-16a34a?style=flat-square)
 
 ### Start building on your Ferrum workspace: its API reference, its events and your keys, in one place.
 
@@ -28,6 +28,7 @@ The Developer Hub is where someone who writes code against a workspace begins. I
 - 📖 **The reference is your workspace's.** It is read from the workspace's own OpenAPI document, built from its metadata, so a record type you added in Studio is in it at once.
 - 🔒 **It shows what you may see.** The hub has no records and reads everything as you. A person without rights on a record type does not see its operations.
 - 🔑 **A key is you, in a script.** A key acts with its maker's rights and no more, until it expires or is revoked. It is shown once.
+- 💻 **Code to copy.** Every operation in curl, JavaScript and Python, with the values you filled in and the headers the API wants.
 - 🧪 **Try a read without leaving the page.** Fill the parameters, press Send, and see the answer as you would get it.
 - 📣 **Events are listed.** Each record type's topics are on one page, with what a delivery carries, so a webhook or a service app can name them.
 - 🤖 **AI agents are first-class.** The overview points to the Model Context Protocol endpoint, where an agent signs in with OAuth or a key and acts with your rights.
@@ -37,13 +38,13 @@ The Developer Hub is where someone who writes code against a workspace begins. I
 
 | | |
 |---|---|
-| 📦 Version | `0.2.1` |
+| 📦 Version | `0.3.0` |
 | 🧱 Kind | Own interface at `/developers/`, embedded in a crate that has no packages, hooks, reports or upkeep |
 | 🗃️ What it adds | No entities, no roles, no reports, no print formats, no menus of records, no upkeep |
 | 🔗 Depends on | Ferrum `>=0.4.0, <0.5` |
 | 🤝 Works with | Every app: it documents whatever records the workspace has |
 | 🌍 Languages | English, Arabic and Hindi (translated by a model, to be reviewed by native speakers) |
-| 🧪 Tests | 3 Rust tests (one against a real PostgreSQL), 8 interface tests (two mount the real route table) |
+| 🧪 Tests | 3 Rust tests (one against a real PostgreSQL), 15 interface tests (three mount the real route table) |
 | 📄 Licence | AGPL-3.0-only |
 
 ## 📸 Screenshots
@@ -99,6 +100,7 @@ Four tabs run along the top (Overview, API reference, Events, Your keys). The ad
 - **Grouped and sorted.** Operations are grouped by record type (tag) and sorted by tag, path and method. A badge shows the method: blue for GET, red for DELETE, green for the others.
 - **Search.** Type words such as an entity, a path or an action. An operation matches when its tag, path, summary or method holds every word. The search is kept in the address (`?q=`), so a result can be shared. A line says "N of M operations".
 - **Parameters.** Each operation opens to a table of its parameters, the path's own (a record's `id`) and the operation's: name (a `*` marks a required one), where it goes (path or query) and type. An operation that takes a body says it takes the record's fields as JSON.
+- **Code samples.** Each operation shows its request in curl, JavaScript (`fetch`) or Python (`requests`), chosen by a tab, with a Copy button. The sample is built from the same request the page would send: the values filled in so far, path and query encoded, the key read from the `FERRUM_KEY` environment variable (never written in), an `Idempotency-Key` on a create, an update or an action, `If-Match` on what changes a record, and for a body the required fields a caller writes, each a placeholder of its type (secrets left for you to type).
 - **Try a read.** For GET operations, fill the path and query parameters and press Send. The request goes from your session, so you get the answer you would get. Send waits until every path parameter has a value, the request path is shown as it will go, and long answers are cut at 20,000 characters.
 - **Writes are not sent from here.** For POST, PUT, PATCH and DELETE the page says changes are made from your own code.
 - **Honest states.** Loading shows skeletons; a refusal (403) shows as denied, no connection as offline, and anything else as failed with a retry; no match offers to clear the search.
@@ -175,7 +177,7 @@ The closest products are the developer areas of platforms and API tools: Stripe'
 | Search the operations | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Try a read from the browser | ✅ | ✅ | ✅ | ✅ | ✅ |
 | Try writes from the browser | ❌ | ✅ | ✅ | ✅ | ✅ |
-| Code samples in many languages | ❌ | ✅ | ✅ | ✅ | 🟡 |
+| Code samples in many languages | ✅ | ✅ | ✅ | ✅ | 🟡 |
 | Self-service API keys with expiry | ✅ | ✅ | ✅ | ➖ | ❌ |
 | A key acts with its maker's rights | ✅ | ➖ | ➖ | ➖ | ➖ |
 | Event catalogue | ✅ | ✅ | ✅ | ➖ | ❌ |
@@ -202,7 +204,7 @@ Notes: the platform's keys can carry a scope and the hub shows it, but the hub m
 
 - 🧪 **Test mode.** Stripe and Shopify give a sandbox to build against.
 - 📋 **Logs and replay.** Delivery and request logs are not in the hub.
-- 💻 **Samples and tooling.** Code in many languages, saved collections and mocks are Postman's ground.
+- 💻 **Tooling.** Saved collections and mocks are Postman's ground; samples here are curl, JavaScript and Python only.
 - ✍️ **Try writes.** The hub only reads.
 
 > [!NOTE]
@@ -212,6 +214,7 @@ Notes: the platform's keys can carry a scope and the hub shows it, but the hub m
 
 ### ✅ Recently shipped
 
+- [x] **0.3.0** Code samples in curl, JavaScript and Python for every operation.
 - [x] **0.2.1** A record can be tried by its id; the Events page names `opened` and `transitioned`; an expired key says so; one version everywhere.
 - [x] **0.2.0**: Upkeep runs one workspace at a time, on whichever replica is free.
 - [x] **0.1.14** Rebuilt on Ferrum-Frontend 06bd1a2: its start through `mountApp`.
@@ -225,8 +228,6 @@ Notes: the platform's keys can carry a scope and the hub shows it, but the hub m
 
 ### 🔜 Next up
 
-- [ ] **Copy as curl.** A Send that also gives the exact command to run elsewhere.
-- [ ] **Code samples** in more languages beside curl.
 - [ ] **Scope on a new key.** Today the hub makes whole-API keys and shows a key's scope if the platform gave it one.
 - [ ] **Webhook endpoints here.** Today an administrator manages them in Administration.
 
@@ -266,7 +267,7 @@ CI runs `cargo fmt -- --check`, `cargo clippy --all-targets -- -D warnings` and 
 ```text
 app.yaml      the manifest
 src/          the crate: the manifest and the interface, embedded
-ui/src/       routes.tsx (the route table), Hub.tsx (the four pages), openapi.ts (operations, search, request paths, topics), locales; *.test.ts(x) and testkit.tsx (the route table mounted)
+ui/src/       routes.tsx (the route table), Hub.tsx (the four pages), openapi.ts (operations, search, request paths, topics), samples.ts (code samples), locales; *.test.ts(x) and testkit.tsx (the route table mounted)
 ui/dist/      the built interface, committed and embedded
 tests/        hub_it.rs: what the hub says, held by the platform it runs on
 build.rs      embeds ui/dist

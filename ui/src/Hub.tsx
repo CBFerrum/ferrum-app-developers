@@ -3,11 +3,12 @@
 // and the events webhooks and service apps hear of.
 
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
-import { useMemo, useState, type FormEvent, type ReactNode } from "react";
+import { useId, useMemo, useState, type FormEvent, type ReactNode } from "react";
 import { NavLink, useLocation, useNavigate, useSearchParams } from "react-router";
 import { ApiError, api, bootstrap, errorMessage, formatDateTime, request, t, isolate } from "@ferrum/client";
 import { Badge, Button, confirmDialog, Field, ListSkeleton, StatePanel, TableSkeleton, TabPanel, Tabs, toast, placed } from "@ferrum/kit";
 import { operations, requestPath, search, topics, type Operation } from "./openapi";
+import { LANGS, sample, sampleRequest, type Lang } from "./samples";
 
 // The hub's four pages, as the kit's tabs: the address is the tab, so a page can be linked to and reloaded.
 const PAGES = [
@@ -71,6 +72,26 @@ function CodeBlock({ text }: { text: string }) {
   );
 }
 
+// The first thing to run: a read of five customers, as every operation's samples are made.
+const FIRST: Operation = { id: "get /api/v1/Customer", method: "GET", path: "/api/v1/Customer", tag: "Customer", summary: "", parameters: [{ name: "limit", in: "query" }], body: false };
+
+const LANG_NAMES: Record<Lang, string> = { curl: "curl", javascript: "JavaScript", python: "Python" };
+
+/** An operation's request in curl, JavaScript or Python, with the values given so far. */
+function Samples({ op, values }: { op: Operation; values: Record<string, string> }) {
+  const id = `sample${useId().replace(/[^a-zA-Z0-9]/g, "")}`;
+  const [lang, setLang] = useState<Lang>("curl");
+  const origin = typeof location === "undefined" ? "" : location.origin;
+  return (
+    <div className="stack">
+      <Tabs id={id} tabs={LANGS.map((l) => ({ id: l, label: LANG_NAMES[l] }))} value={lang} onChange={(l) => setLang(l as Lang)} />
+      <TabPanel id={id} tab={lang}>
+        <CodeBlock text={sample(sampleRequest(op, values), lang, origin)} />
+      </TabPanel>
+    </div>
+  );
+}
+
 export function Overview() {
   const origin = typeof location === "undefined" ? "" : location.origin;
   const admin = bootstrap()?.person?.admin ?? false;
@@ -81,7 +102,7 @@ export function Overview() {
           <p>
             {t("Every record you may see, at")} <Code>{isolate(`${origin}/api/v1/{Entity}`)}</Code>{t(", with a key or your session. The")} <NavLink to="/reference">{t("reference")}</NavLink> {t("lists this workspace's operations; its OpenAPI document is")} <a href="/api/openapi.json">{t("/api/openapi.json")}</a>.
           </p>
-          <CodeBlock text={t("curl -H \"Authorization: Bearer fk_…\" {origin}/api/v1/Customer?limit=5", { origin })} />
+          <CodeBlock text={sample(sampleRequest(FIRST, { limit: "5" }), "curl", origin)} />
         </Card>
         <Card title={t("For AI agents")}>
           <p>
@@ -115,8 +136,7 @@ export function Overview() {
 
 const TRYABLE = new Set(["GET"]);
 
-function Try({ op }: { op: Operation }) {
-  const [values, setValues] = useState<Record<string, string>>({});
+function Try({ op, values, setValues }: { op: Operation; values: Record<string, string>; setValues: (v: Record<string, string>) => void }) {
   const [result, setResult] = useState<{ status: string; body: string } | null>(null);
   const [busy, setBusy] = useState(false);
   const { path, missing } = requestPath(op, values);
@@ -170,6 +190,8 @@ function Try({ op }: { op: Operation }) {
 
 function OperationRow({ op }: { op: Operation }) {
   const [open, setOpen] = useState(false);
+  // What the person filled in: the request they try and the samples they copy are the same one.
+  const [values, setValues] = useState<Record<string, string>>({});
   return (
     <li className="hub-op">
       <button type="button" className="hub-op-head" aria-expanded={open} onClick={() => setOpen(!open)}>
@@ -205,7 +227,8 @@ function OperationRow({ op }: { op: Operation }) {
             </div>
           )}
           {op.body && <p className="muted">{t("Takes a JSON body: the record's fields.")}</p>}
-          {TRYABLE.has(op.method) ? <Try op={op} /> : <p className="muted">{t("Changes are made from your own code: this page only reads.")}</p>}
+          <Samples op={op} values={values} />
+          {TRYABLE.has(op.method) ? <Try op={op} values={values} setValues={setValues} /> : <p className="muted">{t("Changes are made from your own code: this page only reads.")}</p>}
         </div>
       )}
     </li>

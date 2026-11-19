@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0
+
+Needs the same platform as 0.2.0. No database change. Interface rebuilt.
+
+- **Code samples.** Each operation in the reference shows its request in curl, JavaScript (`fetch`) and Python
+  (`requests`), with a Copy button: the values filled in so far, path and query encoded as the page sends them, the key
+  read from `FERRUM_KEY` (a sample never holds one), `Idempotency-Key` on a create, an update or an action, `If-Match`
+  on what changes a record, and a body of the required fields a caller writes with a placeholder of each type; a secret
+  is left out for the caller to type. The Overview's first request is made the same way.
+
 ## 0.2.1
 
 Needs the same platform as 0.2.0. No database change. Interface rebuilt.
