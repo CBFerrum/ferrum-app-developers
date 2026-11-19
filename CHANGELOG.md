@@ -1,5 +1,45 @@
 # Changelog
 
+## 0.4.0
+
+Needs the same platform as 0.2.0. No database change. Interface rebuilt.
+
+- **Try a change.** The reference sends a create, an update, or an action whose contract says it changes records only
+  inside the workspace (`transactional_action`, `query`, `pure`), from a body that starts as the required fields to
+  fill (an action's required parameters, a secret one never filled in) and, for an update, the record's version
+  (`If-Match`). Send asks first, naming the operation, the record, the action's own warning and that it is real; the
+  request then goes once, as the signed-in person, through the route the record screens use, with an
+  `Idempotency-Key` kept while the request stays the same. A body that is not JSON is refused before anything is asked.
+  Nothing typed is kept in the browser's storage.
+- **Not run from here:** a delete, a submit, a cancel, an amend, and an action that reaches outside the workspace or
+  says nothing of what it does. The record screens ask no more than a plain confirmation, so the page says to use them.
+- A path value of `.` or `..` is not taken, so a value cannot move the request off the operation's address.
+
+## 0.3.0
+
+Needs the same platform as 0.2.0. No database change. Interface rebuilt.
+
+- **Code samples.** Each operation in the reference shows its request in curl, JavaScript (`fetch`) and Python
+  (`requests`), with a Copy button: the values filled in so far, path and query encoded as the page sends them, the key
+  read from `FERRUM_KEY` (a sample never holds one), `Idempotency-Key` on a create, an update or an action, `If-Match`
+  on what changes a record, and a body of the required fields a caller writes with a placeholder of each type; a secret
+  is left out for the caller to type. The Overview's first request is made the same way.
+
+## 0.2.1
+
+Needs the same platform as 0.2.0. No database change. Interface rebuilt.
+
+- **A record can be tried by its id.** The workspace's API document puts a record's `id` on the path, shared by its
+  methods; the reference read only each method's own parameters, so `GET /api/v1/{Entity}/{id}` had no `id` field
+  and Send never enabled. A path's parameters are now taken with the operation's (the operation's own winning).
+- **Every topic a record gives.** The Events page names `Entity.opened` for every record, as the platform lists it,
+  and says that a record with a workflow also gives `Entity.transitioned`. A test holds the page's list to the
+  platform's.
+- **An expired key says so.** It stays in the list, marked Expired, until it is revoked.
+- **One version.** `Cargo.toml`, `app.yaml` and the README all say 0.2.1 (the README said 0.1.14), and a test keeps
+  them together.
+- The route table moved to `ui/src/routes.tsx`, so the interface's tests mount the real one.
+
 ## 0.2.0
 
 Needs Ferrum 0.4.0 (apps' upkeep runs one workspace at a time, on whichever replica is free).

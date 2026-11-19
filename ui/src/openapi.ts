@@ -10,6 +10,18 @@ export interface Parameter {
   schema?: { type?: string; format?: string; enum?: unknown[] };
 }
 
+/** A JSON Schema as the workspace's document writes one (server/src/openapi.rs `field_schema`). */
+export interface Schema {
+  type?: string | string[];
+  format?: string;
+  enum?: unknown[];
+  readOnly?: boolean;
+  writeOnly?: boolean;
+  properties?: Record<string, Schema>;
+  required?: string[];
+  $ref?: string;
+}
+
 export interface Operation {
   id: string;
   method: string;
@@ -18,10 +30,22 @@ export interface Operation {
   summary: string;
   parameters: Parameter[];
   body: boolean;
+  /** The JSON body's schema, a `$ref` to the document's components resolved. */
+  bodySchema?: Schema;
+}
+
+interface SpecOperation {
+  tags?: string[];
+  summary?: string;
+  operationId?: string;
+  parameters?: Parameter[];
+  requestBody?: { content?: Record<string, { schema?: Schema }> };
 }
 
 interface Spec {
-  paths?: Record<string, Record<string, { tags?: string[]; summary?: string; operationId?: string; parameters?: Parameter[]; requestBody?: unknown }>>;
+  components?: { schemas?: Record<string, Schema> };
+  /** A path item: its methods, and parameters every method of the path shares (a record's `id`). */
+  paths?: Record<string, { parameters?: Parameter[] } & Partial<Record<string, SpecOperation | Parameter[]>>>;
 }
 
 const METHODS = ["get", "post", "put", "patch", "delete"];
@@ -29,18 +53,24 @@ const METHODS = ["get", "post", "put", "patch", "delete"];
 /** Every operation of a document, sorted by tag, then path, then method. */
 export function operations(spec: Spec): Operation[] {
   const out: Operation[] = [];
+  const resolve = (s?: Schema) => (s?.$ref ? spec.components?.schemas?.[s.$ref.replace("#/components/schemas/", "")] : s);
   for (const [path, item] of Object.entries(spec.paths ?? {})) {
+    const shared = item.parameters ?? [];
     for (const method of METHODS) {
-      const op = item[method];
+      const op = item[method] as SpecOperation | undefined;
       if (!op) continue;
+      // The operation's own parameter replaces the path item's of the same name and place (OpenAPI 3.1).
+      const own = op.parameters ?? [];
+      const parameters = [...shared.filter((p) => !own.some((o) => o.name === p.name && o.in === p.in)), ...own];
       out.push({
         id: `${method} ${path}`,
         method: method.toUpperCase(),
         path,
         tag: op.tags?.[0] ?? "Other",
         summary: op.summary ?? "",
-        parameters: op.parameters ?? [],
+        parameters,
         body: op.requestBody !== undefined,
+        bodySchema: resolve(op.requestBody?.content?.["application/json"]?.schema),
       });
     }
   }
@@ -59,7 +89,8 @@ export function requestPath(op: Operation, values: Record<string, string>): { pa
   const missing: string[] = [];
   let path = op.path.replace(/\{([^}]+)\}/g, (_, name: string) => {
     const v = values[name]?.trim();
-    if (!v) {
+    // "." and ".." would walk the address out of the operation's own (a/b/../c is a/c): not a value.
+    if (!v || v === "." || v === "..") {
       missing.push(name);
       return `{${name}}`;
     }
@@ -72,8 +103,10 @@ export function requestPath(op: Operation, values: Record<string, string>): { pa
   return { path, missing };
 }
 
-/** The events a record of `entity` gives (`Entity.event`), which webhooks and service apps name. */
-export const EVENTS = ["created", "updated", "deleted", "submitted", "cancelled"] as const;
+/** The events a record of `entity` gives (`Entity.event`), which webhooks and service apps name: as the platform
+ * lists them (`Kernel::events`), but for `transitioned`, which only records with a workflow give and the meta index
+ * does not say. `opened`: a signed link to the record first acted on. */
+export const EVENTS = ["created", "updated", "deleted", "opened", "submitted", "cancelled"] as const;
 
 export function topics(entity: string, submittable: boolean): string[] {
   return EVENTS.filter((e) => submittable || (e !== "submitted" && e !== "cancelled")).map((e) => `${entity}.${e}`);
